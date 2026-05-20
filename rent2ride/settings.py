@@ -172,9 +172,8 @@ _debug_env = os.environ.get('DEBUG')
 if _debug_env is not None:
     DEBUG = _debug_env == 'True'
 
-_hosts = os.environ.get('ALLOWED_HOSTS')
-if _hosts:
-    ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',')]
+_hosts = os.environ.get('ALLOWED_HOSTS', 'rent2ride.onrender.com')
+ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',')]
 
 _db_url = os.environ.get('DATABASE_URL')
 if _db_url:
