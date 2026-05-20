@@ -172,7 +172,7 @@ _debug_env = os.environ.get('DEBUG')
 if _debug_env is not None:
     DEBUG = _debug_env == 'True'
 
-_hosts = os.environ.get('ALLOWED_HOSTS', 'rent2ride.onrender.com')
+_hosts = os.environ.get('ALLOWED_HOSTS', 'rent2ride.onrender.com,rent2rides.online,www.rent2rides.online')
 ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',')]
 
 _db_url = os.environ.get('DATABASE_URL')
