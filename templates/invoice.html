@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice #{{ invoice.invoice_number }} - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-receipt"></i> Invoice #{{ invoice.invoice_number }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Renter Information</h6>
+                            <p class="mb-1"><strong>Name:</strong> {{ booking.user.get_full_name|default:booking.user.username }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ booking.user.email }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h6>Invoice Details</h6>
+                            <p class="mb-1"><strong>Invoice #:</strong> {{ invoice.invoice_number }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ invoice.generated_at|date:"M d, Y" }}</p>
+                            <p class="mb-1"><strong>Booking #:</strong> {{ booking.id }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-4">
+                        <h6>Vehicle Information</h6>
+                        <p class="mb-1"><strong>Vehicle:</strong> {{ booking.vehicle.brand }} {{ booking.vehicle.model }}</p>
+                        <p class="mb-1"><strong>Type:</strong> {{ booking.vehicle.get_vehicle_type_display }}</p>
+                        <p class="mb-1"><strong>Location:</strong> {{ booking.vehicle.location }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Rental Period</h6>
+                        <p class="mb-1"><strong>Start:</strong> {{ booking.start_date|date:"M d, Y H:i" }}</p>
+                        <p class="mb-1"><strong>End:</strong> {{ booking.end_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    
+                    <div class="table-responsive mb-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rental Fee ({{ booking.end_date|timesince:booking.start_date }})</td>
+                                    <td class="text-end">₱{{ booking.total_price|floatformat:2 }}</td>
+                                </tr>
+                                {% if booking.insurance_amount > 0 %}
+                                    <tr>
+                                        <td>Insurance Coverage</td>
+                                        <td class="text-end">₱{{ booking.insurance_amount|floatformat:2 }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if booking.discount_amount > 0 %}
+                                    <tr>
+                                        <td>Discount</td>
+                                        <td class="text-end text-success">-₱{{ booking.discount_amount|floatformat:2 }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if booking.late_penalty > 0 %}
+                                    <tr>
+                                        <td>Late Return Penalty</td>
+                                        <td class="text-end text-danger">₱{{ booking.late_penalty|floatformat:2 }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end">₱{{ booking.total_price|floatformat:2 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-0"><strong>Payment Status:</strong> 
+                            <span class="badge bg-{% if booking.payment_status == 'paid' %}success{% else %}warning{% endif %}">
+                                {{ booking.get_payment_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        <a href="{% url 'generate_invoice' booking.id %}?pdf=1" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download PDF
+                        </a>
+                        <button onclick="window.print()" class="btn btn-outline-primary">
+                            <i class="bi bi-printer"></i> Print Invoice
+                        </button>
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-secondary">Back to Booking</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    @media print {
+        .navbar, .btn, footer { display: none !important; }
+        .card { border: none !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}
+{% endblock %}

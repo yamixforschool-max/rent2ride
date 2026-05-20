@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Vehicle - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Vehicle
+                </a>
+                <span class="badge bg-light text-dark border">Secure Booking</span>
+            </div>
+
+            <div class="card shadow booking-flow-card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Book Vehicle</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4 align-items-center">
+                        <div class="col-12 col-md-4">
+                            {% if vehicle.image_url %}
+                                <img src="{{ vehicle.image_url.url }}" class="img-fluid rounded" alt="{{ vehicle.model }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x200" class="img-fluid rounded" alt="No Image">
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <h5 class="mb-1">{{ vehicle.brand }} {{ vehicle.model }}</h5>
+                            <p class="text-muted mb-1">{{ vehicle.get_vehicle_type_display }}</p>
+                            <p class="mb-2"><i class="bi bi-geo-alt"></i> {{ vehicle.location }}</p>
+                            <p class="fw-bold text-primary fs-4 mb-0">&#8369;{{ vehicle.price_per_day }}/day</p>
+                        </div>
+                    </div>
+
+                    {% if existing_bookings %}
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Important:</strong> This vehicle already has bookings. Avoid these dates:
+                            <ul class="mb-0 mt-2">
+                                {% for booking in existing_bookings %}
+                                    <li>
+                                        <strong>{{ booking.start_date|date:"M d, Y" }}</strong> to
+                                        <strong>{{ booking.end_date|date:"M d, Y" }}</strong>
+                                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %} ms-2">
+                                            {{ booking.status|title }}
+                                        </span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" id="bookingForm" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="id_start_date" class="form-label">Start Date & Time</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small mt-1" role="alert">{{ form.start_date.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted" id="startDateHelp">Choose an available date.</small>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="id_end_date" class="form-label">End Date & Time</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small mt-1" role="alert">{{ form.end_date.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted" id="endDateHelp">Must be after the start date.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="promo_code" class="form-label">Promo Code (Optional)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="promo_code" name="promo_code" placeholder="Enter promo code">
+                                <button type="button" class="btn btn-outline-primary" id="applyPromo">Apply</button>
+                            </div>
+                            <small class="text-muted" id="promoMessage" aria-live="polite">Promo will be validated during checkout.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <fieldset>
+                            <legend class="form-label d-block">Payment Type</legend>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_type" id="payment_full" value="full" checked>
+                                <label class="form-check-label" for="payment_full">
+                                    <strong>Full Payment</strong> - Pay the full amount upfront.
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_type" id="payment_deposit" value="deposit">
+                                <label class="form-check-label" for="payment_deposit">
+                                    <strong>Deposit Only</strong> - Pay now, settle the rest before pickup.
+                                </label>
+                            </div>
+                            </fieldset>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include_insurance" name="include_insurance">
+                                <label class="form-check-label" for="include_insurance">
+                                    <strong>Add Insurance Coverage</strong> (+&#8369;500/day)
+                                    <small class="d-block text-muted">Comprehensive protection for your rental period.</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" id="availabilityCheck" role="status" aria-live="polite">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Rental Fee:</span>
+                                <span id="rentalFee">&#8369;0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Insurance:</span>
+                                <span id="insuranceFee">&#8369;0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none;">
+                                <span>Discount:</span>
+                                <span id="discountAmount" class="text-success">-&#8369;0.00</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-1">
+                                <strong>Total:</strong>
+                                <strong id="totalPrice">&#8369;0.00</strong>
+                            </div>
+                            <small class="d-block text-muted" id="estimateCaption">Price will be calculated based on selected dates.</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="proceedBtn">Proceed to Payment</button>
+                            <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const pricePerDay = Number({{ vehicle.price_per_day }});
+    const bookedDates = {{ booked_dates_json|safe }};
+    const insurancePerDay = 500;
+    let promoPercent = 0;
+
+    const startDateInput = document.getElementById('id_start_date');
+    const endDateInput = document.getElementById('id_end_date');
+    const includeInsurance = document.getElementById('include_insurance');
+    const availabilityCheck = document.getElementById('availabilityCheck');
+    const proceedBtn = document.getElementById('proceedBtn');
+    const promoInput = document.getElementById('promo_code');
+    const promoMessage = document.getElementById('promoMessage');
+
+    if (startDateInput) startDateInput.setAttribute('aria-describedby', 'startDateHelp');
+    if (endDateInput) endDateInput.setAttribute('aria-describedby', 'endDateHelp');
+
+    function formatCurrency(value) {
+        return `\u20B1${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function checkDateConflict(startDate, endDate) {
+        if (!startDate || !endDate) return { conflict: false };
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        for (const booking of bookedDates) {
+            const bookingStart = new Date(booking.start);
+            const bookingEnd = new Date(booking.end);
+
+            if (start <= bookingEnd && end >= bookingStart) {
+                return {
+                    conflict: true,
+                    bookingStart: bookingStart.toLocaleDateString(),
+                    bookingEnd: bookingEnd.toLocaleDateString()
+                };
+            }
+        }
+        return { conflict: false };
+    }
+
+    function setEstimateState(type, message) {
+        availabilityCheck.className = `alert alert-${type}`;
+        document.getElementById('estimateCaption').textContent = message;
+    }
+
+    function calculateTotal() {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        if (!startDate || !endDate) {
+            setEstimateState('info', 'Price will be calculated based on selected dates.');
+            proceedBtn.disabled = false;
+            return;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (end <= start) {
+            setEstimateState('danger', 'End date must be after start date.');
+            proceedBtn.disabled = true;
+            return;
+        }
+
+        const conflict = checkDateConflict(startDate, endDate);
+        if (conflict.conflict) {
+            setEstimateState('danger', `Date conflict: already booked from ${conflict.bookingStart} to ${conflict.bookingEnd}.`);
+            proceedBtn.disabled = true;
+            return;
+        }
+
+        const diffMs = end - start;
+        const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+        const rentalFee = pricePerDay * diffDays;
+        const insuranceFee = includeInsurance.checked ? insurancePerDay * diffDays : 0;
+        const subtotal = rentalFee + insuranceFee;
+        const discountValue = subtotal * (promoPercent / 100);
+        const total = Math.max(0, subtotal - discountValue);
+
+        document.getElementById('rentalFee').textContent = formatCurrency(rentalFee);
+        document.getElementById('insuranceFee').textContent = formatCurrency(insuranceFee);
+
+        const discountRow = document.getElementById('discountRow');
+        if (discountValue > 0) {
+            discountRow.style.display = 'flex';
+            document.getElementById('discountAmount').textContent = `-${formatCurrency(discountValue)}`;
+        } else {
+            discountRow.style.display = 'none';
+        }
+
+        document.getElementById('totalPrice').textContent = formatCurrency(total);
+        setEstimateState('success', `Estimated for ${diffDays} day(s). Final amount may update after server validation.`);
+        proceedBtn.disabled = false;
+    }
+
+    document.getElementById('applyPromo').addEventListener('click', function () {
+        const code = promoInput.value.trim().toUpperCase();
+        const supportedCodes = {
+            SAVE10: 10,
+            WELCOME5: 5
+        };
+
+        if (!code) {
+            promoPercent = 0;
+            promoMessage.className = 'text-muted';
+            promoMessage.textContent = 'Promo will be validated during checkout.';
+            calculateTotal();
+            return;
+        }
+
+        if (supportedCodes[code]) {
+            promoPercent = supportedCodes[code];
+            promoMessage.className = 'text-success';
+            promoMessage.textContent = `${code} applied for an estimated ${promoPercent}% discount.`;
+        } else {
+            promoPercent = 0;
+            promoMessage.className = 'text-danger';
+            promoMessage.textContent = 'Promo not recognized. Please check the code.';
+        }
+
+        calculateTotal();
+    });
+
+    startDateInput.addEventListener('change', calculateTotal);
+    endDateInput.addEventListener('change', calculateTotal);
+    includeInsurance.addEventListener('change', calculateTotal);
+
+    calculateTotal();
+</script>
+{% endblock %}

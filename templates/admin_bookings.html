@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Bookings - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5 admin-shell">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+            <h2 class="mb-2">Manage Bookings</h2>
+            <p class="text-muted mb-0">Review, confirm, or cancel booking requests.</p>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2">{{ bookings|length }} booking{{ bookings|length|pluralize }}</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <caption class="visually-hidden">All bookings with rental dates, pricing, status, and moderation actions.</caption>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Vehicle</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Total Price</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>#{{ booking.id }}</td>
+                                <td>{{ booking.user.username }}</td>
+                                <td>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</td>
+                                <td>{{ booking.start_date|date:"M d, Y" }}</td>
+                                <td>{{ booking.end_date|date:"M d, Y" }}</td>
+                                <td>&#8369;{{ booking.total_price }}</td>
+                                <td>
+                                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if booking.payment_status == 'paid' %}success{% else %}warning{% endif %}">
+                                        {{ booking.get_payment_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="POST" class="d-flex flex-wrap gap-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                        {% if booking.status == 'pending' %}
+                                            <button type="button" name="action" value="confirm" class="btn btn-sm btn-success"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Confirm Booking"
+                                                    data-confirm-message="Confirm this booking request?"
+                                                    data-confirm-label="Confirm Booking"
+                                                    data-confirm-variant="success">Confirm</button>
+                                        {% endif %}
+                                        {% if booking.status != 'canceled' %}
+                                            <button type="button" name="action" value="cancel" class="btn btn-sm btn-danger"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Cancel Booking"
+                                                    data-confirm-message="Are you sure you want to cancel this booking?"
+                                                    data-confirm-label="Cancel Booking"
+                                                    data-confirm-variant="danger">Cancel</button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">No bookings found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

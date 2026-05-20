@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms of Service - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="mb-4">Terms of Service</h1>
+                    <p class="text-muted mb-4">Last updated: January 2024</p>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">1. Acceptance of Terms</h2>
+                        <p class="text-secondary">
+                            By accessing and using Rent2Ride, you accept and agree to be bound by the terms and provision 
+                            of this agreement. If you do not agree to abide by the above, please do not use this service.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">2. Description of Service</h2>
+                        <p class="text-secondary">
+                            Rent2Ride is a peer-to-peer vehicle rental platform that connects vehicle owners with renters. 
+                            We provide a marketplace for vehicle rentals but are not a party to the rental agreement between 
+                            owners and renters.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">3. User Accounts</h2>
+                        <p class="text-secondary">
+                            To use certain features of our service, you must register for an account. You agree to:
+                        </p>
+                        <ul class="text-secondary">
+                            <li>Provide accurate, current, and complete information</li>
+                            <li>Maintain and update your information to keep it accurate</li>
+                            <li>Maintain the security of your password and identification</li>
+                            <li>Accept all responsibility for activities that occur under your account</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">4. Vehicle Owners</h2>
+                        <p class="text-secondary">
+                            Vehicle owners who list their vehicles on Rent2Ride agree to:
+                        </p>
+                        <ul class="text-secondary">
+                            <li>Provide accurate information about their vehicles</li>
+                            <li>Ensure vehicles are in safe, roadworthy condition</li>
+                            <li>Maintain valid registration and insurance</li>
+                            <li>Respond promptly to booking requests</li>
+                            <li>Comply with all applicable laws and regulations</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">5. Renters</h2>
+                        <p class="text-secondary">
+                            Renters agree to:
+                        </p>
+                        <ul class="text-secondary">
+                            <li>Possess a valid driver's license</li>
+                            <li>Use the vehicle only for lawful purposes</li>
+                            <li>Return the vehicle in the same condition as received</li>
+                            <li>Report any damage or issues immediately</li>
+                            <li>Comply with all traffic laws and regulations</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">6. Payments and Fees</h2>
+                        <p class="text-secondary">
+                            All payments are processed through our secure payment gateway. Rent2Ride charges a service fee 
+                            for facilitating transactions. All fees are clearly displayed before booking confirmation. 
+                            Refunds are subject to our cancellation policy.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">7. Cancellation Policy</h2>
+                        <p class="text-secondary">
+                            Cancellation policies vary by vehicle owner. Please review the cancellation policy before 
+                            confirming your booking. Rent2Ride reserves the right to cancel bookings in cases of fraud, 
+                            safety concerns, or violation of these terms.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">8. Insurance and Liability</h2>
+                        <p class="text-secondary">
+                            Vehicle owners are responsible for maintaining appropriate insurance coverage. Renters are 
+                            encouraged to purchase additional insurance coverage. Rent2Ride is not responsible for any 
+                            damages, injuries, or losses that occur during vehicle rental.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">9. Prohibited Activities</h2>
+                        <p class="text-secondary">You agree not to:</p>
+                        <ul class="text-secondary">
+                            <li>Use the service for any illegal purpose</li>
+                            <li>Violate any laws or regulations</li>
+                            <li>Infringe on the rights of others</li>
+                            <li>Transmit harmful code or viruses</li>
+                            <li>Interfere with the operation of the service</li>
+                            <li>Create false accounts or misrepresent yourself</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">10. Intellectual Property</h2>
+                        <p class="text-secondary">
+                            All content on Rent2Ride, including text, graphics, logos, and software, is the property of 
+                            Rent2Ride or its content suppliers and is protected by copyright and other intellectual property laws.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">11. Limitation of Liability</h2>
+                        <p class="text-secondary">
+                            Rent2Ride acts as a platform connecting vehicle owners and renters. We are not responsible for 
+                            the condition of vehicles, the conduct of users, or any disputes between owners and renters. 
+                            Our liability is limited to the amount of fees we have collected.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">12. Changes to Terms</h2>
+                        <p class="text-secondary">
+                            Rent2Ride reserves the right to modify these terms at any time. We will notify users of 
+                            significant changes. Continued use of the service after changes constitutes acceptance of 
+                            the new terms.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">13. Contact Information</h2>
+                        <p class="text-secondary">
+                            If you have questions about these Terms of Service, please contact us at 
+                            <a href="{% url 'contact' %}">support@rent2ride.com</a>.
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <p class="mb-0">
+                            <i class="bi bi-info-circle"></i> By using Rent2Ride, you acknowledge that you have read, 
+                            understood, and agree to be bound by these Terms of Service.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

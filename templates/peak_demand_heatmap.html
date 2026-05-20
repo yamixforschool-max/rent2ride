@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Peak Demand Heatmap - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Peak Demand Heatmap</h2>
+            <p class="text-muted">Last 30 days: {{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+    
+    <!-- Top Locations -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Locations by Demand</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_locations %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Total Demand</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for location in top_locations %}
+                                        <tr>
+                                            <td><i class="bi bi-geo-alt"></i> {{ location.location }}</td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ location.total }}</span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No location data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Vehicle Types</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_vehicle_types %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Vehicle Type</th>
+                                        <th>Total Demand</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vtype in top_vehicle_types %}
+                                        <tr>
+                                            <td>{{ vtype.vehicle_type|title }}</td>
+                                            <td>
+                                                <span class="badge bg-success">{{ vtype.total }}</span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No vehicle type data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Peak Demand Table -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">Peak Demand Details</h5>
+        </div>
+        <div class="card-body">
+            {% if peak_demands %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Vehicle Type</th>
+                                <th>Demand Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demand in peak_demands %}
+                                <tr>
+                                    <td>{{ demand.date|date:"M d, Y" }}</td>
+                                    <td><i class="bi bi-geo-alt"></i> {{ demand.location }}</td>
+                                    <td>{{ demand.vehicle_type|title }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if demand.total_demand >= 10 %}danger{% elif demand.total_demand >= 5 %}warning{% else %}info{% endif %}">
+                                            {{ demand.total_demand }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <p>No peak demand data available for this period.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

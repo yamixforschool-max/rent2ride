@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+            <h2 class="mb-2">Dashboard</h2>
+            <p class="text-muted mb-0">Track your vehicles, bookings, and next actions in one place.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-light text-dark border px-3 py-2">{{ bookings|length }} booking{{ bookings|length|pluralize }}</span>
+            {% if profile.is_owner %}
+                <span class="badge bg-light text-dark border px-3 py-2">{{ vehicles|length }} vehicle{{ vehicles|length|pluralize }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if profile.is_owner %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">My Vehicles</h4>
+                    <a href="{% url 'add_vehicle' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Vehicle
+                    </a>
+                </div>
+                {% if vehicles %}
+                    <div class="row g-4">
+                        {% for vehicle in vehicles %}
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <div class="card h-100 shadow-sm">
+                                    {% if vehicle.image_url %}
+                                        <img src="{{ vehicle.image_url.url }}" class="card-img-top" alt="{{ vehicle.model }}" style="height: 200px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height:200px;"><i class="bi bi-car-front fs-1 opacity-40"></i></div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ vehicle.brand }} {{ vehicle.model }}</h5>
+                                        <p class="text-muted mb-2">Status:
+                                            <span class="badge bg-{% if vehicle.status == 'available' %}success{% elif vehicle.status == 'pending_approval' %}warning{% else %}danger{% endif %}">
+                                                {{ vehicle.get_status_display }}
+                                            </span>
+                                        </p>
+                                        <p class="fw-bold text-primary mb-0">&#8369;{{ vehicle.price_per_day }}/day</p>
+                                    </div>
+                                    <div class="card-footer d-grid">
+                                        <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-sm btn-outline-primary">View Vehicle</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        You have not listed any vehicles yet.
+                        <a href="{% url 'add_vehicle' %}" class="fw-semibold text-decoration-none">Add your first vehicle</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if not profile.is_owner %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5>Quick Actions</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'upload_drivers_license' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-card-text"></i> Driver's License
+                            </a>
+                            <a href="{% url 'loyalty_points' %}" class="btn btn-outline-warning">
+                                <i class="bi bi-star"></i> Loyalty Points
+                            </a>
+                            <a href="{% url 'referral' %}" class="btn btn-outline-success">
+                                <i class="bi bi-people"></i> Referral Program
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Recent Bookings</h4>
+            {% if bookings %}
+                <div class="table-responsive card shadow-sm">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <caption class="visually-hidden">Recent bookings with dates, status, payment status, and quick actions.</caption>
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Vehicle</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                                <tr>
+                                    <td>#{{ booking.id }}</td>
+                                    <td>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</td>
+                                    <td>{{ booking.start_date|date:"M d, Y" }}</td>
+                                    <td>{{ booking.end_date|date:"M d, Y" }}</td>
+                                    <td>&#8369;{{ booking.total_price }}</td>
+                                    <td><span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %}">{{ booking.get_status_display }}</span></td>
+                                    <td><span class="badge bg-{% if booking.payment_status == 'paid' %}success{% else %}warning{% endif %}">{{ booking.get_payment_status_display }}</span></td>
+                                    <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-primary">View</a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No bookings yet. Start by browsing available vehicles.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Identity Verification - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-shield-check"></i> Identity Verification</h3>
+                </div>
+                <div class="card-body p-4">
+                    {% if verification %}
+                        <div class="alert alert-{% if verification.status == 'approved' %}success{% elif verification.status == 'rejected' %}danger{% else %}warning{% endif %} mb-4">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-{% if verification.status == 'approved' %}check-circle{% elif verification.status == 'rejected' %}x-circle{% else %}clock{% endif %}"></i>
+                                Status: {{ verification.get_status_display }}
+                            </h5>
+                            {% if verification.status == 'approved' %}
+                                <p class="mb-0">Your identity has been verified! You can now make bookings.</p>
+                            {% elif verification.status == 'rejected' %}
+                                <p><strong>Rejection Reason:</strong> {{ verification.rejection_reason }}</p>
+                                <p class="mb-0">Please upload a new document to try again.</p>
+                            {% else %}
+                                <p class="mb-0">Your document is under review. We'll notify you once it's processed.</p>
+                            {% endif %}
+                        </div>
+
+                        {% if verification.id_document %}
+                            <div class="mb-4">
+                                <h5>Uploaded Document</h5>
+                                <a href="{{ verification.id_document.url }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf"></i> View Document
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Verification Required</h5>
+                            <p class="mb-0">
+                                To make your first booking, please verify your identity by uploading a valid government-issued ID.
+                                This helps us ensure the safety and security of our platform.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_id_document" class="form-label">
+                                Government-Issued ID <span class="text-danger">*</span>
+                            </label>
+                            {{ form.id_document }}
+                            <small class="form-text text-muted">
+                                Accepted formats: JPG, PNG, PDF. Max size: 5MB
+                            </small>
+                            {% if form.id_document.errors %}
+                                <div class="text-danger">{{ form.id_document.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Accepted Documents:</h6>
+                            <ul class="mb-0">
+                                <li>Driver's License</li>
+                                <li>National ID</li>
+                                <li>Passport</li>
+                                <li>SSS ID</li>
+                                <li>PhilHealth ID</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> {% if verification %}Update Document{% else %}Upload Document{% endif %}
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

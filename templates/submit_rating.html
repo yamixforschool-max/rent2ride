@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Rate Your Experience - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-star-fill"></i> Rate Your Experience</h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Booking Info -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5>Booking Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Vehicle:</strong> {{ booking.vehicle.brand }} {{ booking.vehicle.model }}</p>
+                                    <p class="mb-1"><strong>Rental Period:</strong> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Owner:</strong> {{ booking.vehicle.owner.get_full_name|default:booking.vehicle.owner.username }}</p>
+                                    <p class="mb-1"><strong>Total Paid:</strong> ₱{{ booking.total_price }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Vehicle Rating -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Rate the Vehicle</strong> <span class="text-danger">*</span>
+                            </label>
+                            <div class="rating-input mb-2">
+                                {% for i in "12345" %}
+                                    <input type="radio" name="vehicle_rating" value="{{ i }}" id="vehicle_{{ i }}" 
+                                           {% if form.vehicle_rating.value == i %}checked{% endif %} required>
+                                    <label for="vehicle_{{ i }}" class="star-label">
+                                        <i class="bi bi-star{% if form.vehicle_rating.value|add:0 >= i|add:0 %}-fill{% endif %}"></i>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {{ form.vehicle_review }}
+                            {% if form.vehicle_review.errors %}
+                                <div class="text-danger">{{ form.vehicle_review.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Owner Rating -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Rate the Owner</strong> <span class="text-muted">(Optional)</span>
+                            </label>
+                            <div class="rating-input mb-2">
+                                {% for i in "12345" %}
+                                    <input type="radio" name="owner_rating" value="{{ i }}" id="owner_{{ i }}"
+                                           {% if form.owner_rating.value == i %}checked{% endif %}>
+                                    <label for="owner_{{ i }}" class="star-label">
+                                        <i class="bi bi-star{% if form.owner_rating.value|add:0 >= i|add:0 %}-fill{% endif %}"></i>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {{ form.owner_review }}
+                            {% if form.owner_review.errors %}
+                                <div class="text-danger">{{ form.owner_review.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Submit Rating
+                            </button>
+                            <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.rating-input {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 2rem;
+}
+
+.rating-input input[type="radio"] {
+    display: none;
+}
+
+.rating-input .star-label {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-input .star-label:hover,
+.rating-input input[type="radio"]:checked ~ .star-label,
+.rating-input input[type="radio"]:checked + .star-label {
+    color: #ffc107;
+}
+
+.rating-input input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}
+{% endblock %}

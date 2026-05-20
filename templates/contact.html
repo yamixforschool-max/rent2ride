@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-lg-10 mx-auto">
+            <div class="row g-4">
+                <!-- Contact Form -->
+                <div class="col-12 col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="mb-0"><i class="bi bi-envelope"></i> Send us a Message</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Your Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="subject" name="subject" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-send"></i> Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-12 col-md-5">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="mb-0"><i class="bi bi-info-circle"></i> Contact Information</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <h5><i class="bi bi-envelope-fill text-primary me-2"></i>Email</h5>
+                                <p class="text-secondary mb-0">support@rent2ride.com</p>
+                                <p class="text-secondary mb-0">info@rent2ride.com</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5><i class="bi bi-telephone-fill text-primary me-2"></i>Phone</h5>
+                                <p class="text-secondary mb-0">+63 (2) 1234-5678</p>
+                                <p class="text-secondary mb-0">+63 912 345 6789</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5><i class="bi bi-clock-fill text-primary me-2"></i>Business Hours</h5>
+                                <p class="text-secondary mb-0">Monday - Friday: 9:00 AM - 6:00 PM</p>
+                                <p class="text-secondary mb-0">Saturday: 10:00 AM - 4:00 PM</p>
+                                <p class="text-secondary mb-0">Sunday: Closed</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5><i class="bi bi-geo-alt-fill text-primary me-2"></i>Address</h5>
+                                <p class="text-secondary mb-0">
+                                    123 Main Street<br>
+                                    Metro Manila<br>
+                                    Philippines 1000
+                                </p>
+                            </div>
+
+                            <hr>
+
+                            <div>
+                                <h5 class="mb-3">Follow Us</h5>
+                                <div class="d-flex gap-3">
+                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-facebook"></i> Facebook
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-twitter"></i> Twitter
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-instagram"></i> Instagram
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0"><i class="bi bi-question-circle"></i> Frequently Asked Questions</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How do I book a vehicle?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Simply browse available vehicles, select your preferred dates, and complete the booking process. 
+                                    You'll need to create an account and provide payment information.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    What documents do I need?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You'll need a valid driver's license and a government-issued ID. Some vehicle owners may require 
+                                    additional documentation.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    How do I become a vehicle owner/host?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Sign up for an account and select "Become a Host" during registration. Once approved, you can list 
+                                    your vehicle and start earning.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    What payment methods are accepted?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We accept major credit cards, debit cards, and digital payment methods through our secure 
+                                    payment gateway powered by PayMongo.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

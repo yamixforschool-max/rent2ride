@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Vehicles - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <h2 class="mb-4">Manage Vehicles</h2>
+    
+    <!-- Filter buttons -->
+    <div class="mb-3">
+        <div class="d-grid d-md-flex gap-2">
+            <a href="{% url 'admin_vehicles' %}" class="btn btn-outline-primary btn-sm">All Vehicles</a>
+            <a href="{% url 'admin_vehicles' %}?status=pending_approval" class="btn btn-warning btn-sm">Pending Approval</a>
+            <a href="{% url 'admin_vehicles' %}?status=available" class="btn btn-success btn-sm">Available</a>
+            <a href="{% url 'admin_vehicles' %}?status=not_available" class="btn btn-danger btn-sm">Not Available</a>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Brand/Model</th>
+                            <th>Type</th>
+                            <th>Owner</th>
+                            <th>Price/Day</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in vehicles %}
+                            <tr>
+                                <td>{{ vehicle.id }}</td>
+                                <td>
+                                    {% if vehicle.image_url %}
+                                        <img src="{{ vehicle.image_url.url }}" alt="{{ vehicle.model }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <span class="text-muted">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ vehicle.brand }} {{ vehicle.model }}</td>
+                                <td>{{ vehicle.get_vehicle_type_display }}</td>
+                                <td>{{ vehicle.owner.username }}</td>
+                                <td>₱{{ vehicle.price_per_day }}</td>
+                                <td>{{ vehicle.location }}</td>
+                                <td>
+                                    <span class="badge bg-{% if vehicle.status == 'available' %}success{% elif vehicle.status == 'pending_approval' %}warning{% else %}danger{% endif %}">
+                                        {{ vehicle.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        {% if vehicle.status == 'pending_approval' %}
+                                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#reviewModal{{ vehicle.id }}">
+                                                <i class="bi bi-file-earmark-text"></i> Review
+                                            </button>
+                                        {% endif %}
+                                        <form method="POST" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                                            {% if vehicle.status == 'pending_approval' %}
+                                                <button type="button" name="action" value="approve" class="btn btn-sm btn-success"
+                                                        data-confirm-modal="true"
+                                                        data-confirm-title="Approve Vehicle"
+                                                        data-confirm-message="Approve this vehicle listing?"
+                                                        data-confirm-label="Approve Vehicle"
+                                                        data-confirm-variant="success">
+                                                    <i class="bi bi-check-circle"></i> Approve
+                                                </button>
+                                            {% endif %}
+                                            {% if vehicle.status == 'rejected' %}
+                                                <button type="button" name="action" value="approve" class="btn btn-sm btn-success"
+                                                        data-confirm-modal="true"
+                                                        data-confirm-title="Re-approve Vehicle"
+                                                        data-confirm-message="Re-approve this vehicle listing?"
+                                                        data-confirm-label="Re-approve Vehicle"
+                                                        data-confirm-variant="success">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Re-approve
+                                                </button>
+                                            {% endif %}
+                                            <button type="button" name="action" value="delete" class="btn btn-sm btn-danger"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Delete Vehicle"
+                                                    data-confirm-message="Are you sure you want to permanently delete this vehicle listing?"
+                                                    data-confirm-label="Delete Vehicle"
+                                                    data-confirm-variant="danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- Review Modal -->
+                                    {% if vehicle.status == 'pending_approval' %}
+                                        <div class="modal fade" id="reviewModal{{ vehicle.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Review Vehicle: {{ vehicle.brand }} {{ vehicle.model }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <h6>Vehicle Documents</h6>
+                                                        {% for doc_item in vehicles_with_docs %}
+                                                            {% if doc_item.vehicle.id == vehicle.id %}
+                                                                {% if doc_item.documents %}
+                                                                    <div class="list-group mb-3">
+                                                                        {% for doc in doc_item.documents %}
+                                                                            <div class="list-group-item">
+                                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                                    <div>
+                                                                                        <strong>{{ doc.get_document_type_display }}</strong>
+                                                                                        <br>
+                                                                                        <small class="text-muted">Uploaded: {{ doc.uploaded_at|date:"M d, Y H:i" }}</small>
+                                                                                    </div>
+                                                                                    <a href="{{ doc.document_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                                        <i class="bi bi-eye"></i> View
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                {% else %}
+                                                                    <p class="text-muted">No documents uploaded.</p>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        
+                                                        <form method="POST" id="rejectForm{{ vehicle.id }}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Rejection Reason (if rejecting)</label>
+                                                                <textarea name="rejection_reason" class="form-control" rows="3" placeholder="Enter reason for rejection..."></textarea>
+                                                            </div>
+                                                            <div class="d-flex gap-2">
+                                                                <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                                    <i class="bi bi-check-circle"></i> Approve
+                                                                </button>
+                                                                <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                                                    <i class="bi bi-x-circle"></i> Reject
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No vehicles found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

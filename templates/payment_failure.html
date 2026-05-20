@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="card shadow text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h2 class="text-danger mb-3">Payment Canceled</h2>
+                    <p class="lead mb-4">Your payment was not completed.</p>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'booking' booking.vehicle.id %}" class="btn btn-primary">Try Again</a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Go to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Driver License Verification - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-card-text"></i> Driver License Verification</h4>
+                </div>
+                <div class="card-body">
+                    {% if license and license.status == 'verified' %}
+                        <div class="alert alert-success">
+                            <h6><i class="bi bi-check-circle"></i> License Verified</h6>
+                            <p class="mb-1"><strong>License Number:</strong> {{ license.license_number }}</p>
+                            <p class="mb-1"><strong>Expiration Date:</strong> {{ license.expiration_date|date:"M d, Y" }}</p>
+                            {% if license.is_expired %}
+                                <div class="alert alert-warning mt-2">
+                                    <i class="bi bi-exclamation-triangle"></i> Your license has expired. Please update it below.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% elif license and license.status == 'pending' %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-clock"></i> Your license is pending verification. Admin will review it shortly.
+                        </div>
+                    {% elif license and license.status == 'rejected' %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-x-circle"></i> Your license was rejected.
+                            {% if license.rejection_reason %}
+                                <p class="mb-0 mt-2"><strong>Reason:</strong> {{ license.rejection_reason }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+                            {{ form.license_number }}
+                            {% if form.license_number.errors %}
+                                <div class="text-danger">{{ form.license_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_expiration_date" class="form-label">Expiration Date <span class="text-danger">*</span></label>
+                            {{ form.expiration_date }}
+                            {% if form.expiration_date.errors %}
+                                <div class="text-danger">{{ form.expiration_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_license_image_front" class="form-label">ID / License Front Image <span class="text-danger">*</span></label>
+                            {{ form.license_image_front }}
+                            {% if form.license_image_front.errors %}
+                                <div class="text-danger">{{ form.license_image_front.errors }}</div>
+                            {% endif %}
+                            {% if license and license.license_image_front %}
+                                <div class="mt-2">
+                                    <img src="{{ license.license_image_front.url }}" class="img-thumbnail" style="max-width: 200px;" alt="Current ID front">
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Upload a clear photo of the front of your ID or driver's license.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_license_image_back" class="form-label">ID / License Back Image <span class="text-muted">(Optional)</span></label>
+                            {{ form.license_image_back }}
+                            {% if form.license_image_back.errors %}
+                                <div class="text-danger">{{ form.license_image_back.errors }}</div>
+                            {% endif %}
+                            {% if license and license.license_image_back %}
+                                <div class="mt-2">
+                                    <img src="{{ license.license_image_back.url }}" class="img-thumbnail" style="max-width: 200px;" alt="Current ID back">
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> <strong>Note:</strong> Your license will be reviewed by an admin before you can make bookings.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                {% if is_edit %}Update & Resubmit{% else %}Submit for Verification{% endif %}
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-lg-10 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="mb-4">About Rent2Ride</h1>
+                    
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">Our Mission</h2>
+                        <p class="text-secondary">
+                            Rent2Ride is a peer-to-peer vehicle rental platform that connects vehicle owners with renters 
+                            in a safe, convenient, and affordable way. Our mission is to make vehicle rental accessible 
+                            to everyone while providing vehicle owners with an opportunity to earn income from their assets.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">What We Offer</h2>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-car-front-fill text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <h5>Variety of Vehicles</h5>
+                                        <p class="text-secondary mb-0">
+                                            From motorcycles to SUVs, we offer a wide range of vehicles to suit your needs.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-shield-check-fill text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <h5>Safe & Secure</h5>
+                                        <p class="text-secondary mb-0">
+                                            All vehicles are verified and insured. Your safety is our priority.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-currency-dollar text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <h5>Affordable Rates</h5>
+                                        <p class="text-secondary mb-0">
+                                            Competitive pricing with transparent fees. No hidden charges.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-clock-fill text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <h5>24/7 Support</h5>
+                                        <p class="text-secondary mb-0">
+                                            Our support team is available around the clock to assist you.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">How It Works</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                        <span class="fs-4 fw-bold">1</span>
+                                    </div>
+                                    <h5>Search & Compare</h5>
+                                    <p class="text-secondary">
+                                        Browse available vehicles in your area and compare prices and features.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                        <span class="fs-4 fw-bold">2</span>
+                                    </div>
+                                    <h5>Book & Pay</h5>
+                                    <p class="text-secondary">
+                                        Select your dates and complete the secure payment process.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                        <span class="fs-4 fw-bold">3</span>
+                                    </div>
+                                    <h5>Enjoy Your Ride</h5>
+                                    <p class="text-secondary">
+                                        Pick up your vehicle and enjoy your journey with peace of mind.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">For Vehicle Owners</h2>
+                        <p class="text-secondary">
+                            Are you a vehicle owner looking to earn extra income? Rent2Ride provides you with a platform 
+                            to list your vehicle and connect with renters. We handle the booking process, payments, and 
+                            provide insurance options to protect your asset. Join our community of vehicle owners today!
+                        </p>
+                        <a href="{% url 'signup' %}" class="btn btn-primary mt-2">Become a Host</a>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Need Help?</h5>
+                        <p class="mb-0">
+                            If you have any questions or need assistance, please don't hesitate to 
+                            <a href="{% url 'contact' %}" class="alert-link">contact us</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

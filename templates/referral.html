@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Referral Program - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-people"></i> Referral Program</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success mb-4">
+                        <h6>Your Referral Code</h6>
+                        <div class="input-group input-group-lg">
+                            <input type="text" class="form-control text-center fw-bold fs-4" value="{{ referral_code.code }}" id="referralCode" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyReferralCode()">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Share this code with friends to earn rewards!</small>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>How It Works</h6>
+                                    <ol class="text-start">
+                                        <li>Share your referral code with friends</li>
+                                        <li>They sign up using your code</li>
+                                        <li>They get a discount on their first booking</li>
+                                        <li>You earn rewards when they complete bookings</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Benefits</h6>
+                                    <ul class="text-start">
+                                        <li>Your friend gets 10% off first booking</li>
+                                        <li>You earn loyalty points for each referral</li>
+                                        <li>Unlimited referrals</li>
+                                        <li>Track all your referrals</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Your Referrals</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if referrals_made %}
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Referred User</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ref in referrals_made %}
+                                            <tr>
+                                                <td>{{ ref.referred_user.get_full_name|default:ref.referred_user.username }}</td>
+                                                <td>{{ ref.created_at|date:"M d, Y" }}</td>
+                                                <td>
+                                                    {% if ref.reward_given %}
+                                                        <span class="badge bg-success">Rewarded</span>
+                                                    {% elif ref.discount_applied %}
+                                                        <span class="badge bg-info">Discount Applied</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">No referrals yet. Start sharing your code!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function copyReferralCode() {
+        const code = document.getElementById('referralCode');
+        code.select();
+        document.execCommand('copy');
+        alert('Referral code copied to clipboard!');
+    }
+</script>
+{% endblock %}
+{% endblock %}

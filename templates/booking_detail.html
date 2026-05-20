@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+                <span class="badge bg-light text-dark border">Booking #{{ booking.id }}</span>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Booking Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <div class="detail-block h-100">
+                                <h6 class="mb-3">Vehicle Information</h6>
+                                <p class="mb-1"><strong>Vehicle:</strong> {{ booking.vehicle.brand }} {{ booking.vehicle.model }}</p>
+                                <p class="mb-1"><strong>Type:</strong> {{ booking.vehicle.get_vehicle_type_display }}</p>
+                                <p class="mb-0"><strong>Location:</strong> {{ booking.vehicle.location }}</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="detail-block h-100">
+                                <h6 class="mb-3">Rental Period</h6>
+                                <p class="mb-1"><strong>Start:</strong> {{ booking.start_date|date:"M d, Y H:i" }}</p>
+                                <p class="mb-1"><strong>End:</strong> {{ booking.end_date|date:"M d, Y H:i" }}</p>
+                                <p class="mb-0"><strong>Duration:</strong> {{ booking.end_date|timesince:booking.start_date }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <h6>Booking Status</h6>
+                            <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}danger{% endif %} fs-6">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <h6>Payment Status</h6>
+                            <span class="badge bg-{% if booking.payment_status == 'paid' %}success{% else %}warning{% endif %} fs-6">
+                                {{ booking.get_payment_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if time_remaining and booking.status == 'pending' and booking.payment_status == 'pending' %}
+                        <div class="alert alert-warning" id="expirationAlert">
+                            <h6><i class="bi bi-clock"></i> Payment Expires In</h6>
+                            <div id="countdown" class="fs-4 fw-bold" role="timer" aria-live="polite" aria-atomic="true">
+                                <span id="hours">00</span>h
+                                <span id="minutes">00</span>m
+                                <span id="seconds">00</span>s
+                            </div>
+                            <small>Complete payment before expiration to confirm this booking.</small>
+                        </div>
+                    {% endif %}
+
+                    <div class="alert alert-primary">
+                        <h6>Total Amount</h6>
+                        <h3 class="mb-1">&#8369;{{ booking.total_price }}</h3>
+                        {% if booking.deposit_amount > 0 %}
+                            <small class="text-muted d-block">Deposit paid: &#8369;{{ booking.deposit_amount }}</small>
+                        {% endif %}
+                        {% if booking.insurance_amount > 0 %}
+                            <small class="text-muted d-block">Insurance: &#8369;{{ booking.insurance_amount }}</small>
+                        {% endif %}
+                        {% if booking.discount_amount > 0 %}
+                            <small class="text-success d-block">Discount: -&#8369;{{ booking.discount_amount }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        {% if booking.payment_status == 'pending' and booking.user == request.user %}
+                            <a href="{% url 'payment' booking.id %}" class="btn btn-primary btn-lg">Complete Payment</a>
+                        {% endif %}
+
+                        {% if booking.status == 'confirmed' or booking.status == 'completed' %}
+                            <a href="{% url 'conversation' booking.id %}" class="btn btn-outline-primary">
+                                <i class="bi bi-chat-dots"></i> Message {{ booking.vehicle.owner.get_full_name|default:booking.vehicle.owner.username }}
+                            </a>
+                            <a href="{% url 'generate_invoice' booking.id %}" class="btn btn-outline-info">
+                                <i class="bi bi-receipt"></i> View Invoice
+                            </a>
+                        {% endif %}
+
+                        {% if booking.status == 'completed' and booking.user == request.user %}
+                            {% if not booking.rating %}
+                                <a href="{% url 'submit_rating' booking.id %}" class="btn btn-outline-success">
+                                    <i class="bi bi-star"></i> Rate and Review
+                                </a>
+                            {% endif %}
+
+                            {% if not damage_report %}
+                                <a href="{% url 'report_damage' booking.id %}" class="btn btn-outline-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Report Damage
+                                </a>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if booking.payment_status == 'paid' and booking.user == request.user %}
+                            {% if not refunds %}
+                                <a href="{% url 'request_refund' booking.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Request Refund
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {% if security_deposit %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-shield-check"></i> Security Deposit</h6>
+                            <p class="mb-1"><strong>Amount:</strong> &#8369;{{ security_deposit.amount }}</p>
+                            <p class="mb-0"><strong>Status:</strong>
+                                <span class="badge bg-{% if security_deposit.status == 'refunded' %}success{% elif security_deposit.status == 'deducted' %}warning{% else %}info{% endif %}">
+                                    {{ security_deposit.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    {% if refunds %}
+                        {% for refund in refunds %}
+                            <div class="alert alert-{% if refund.status == 'approved' %}success{% elif refund.status == 'rejected' %}danger{% else %}info{% endif %}">
+                                <h6><i class="bi bi-arrow-counterclockwise"></i> Refund Request</h6>
+                                <p class="mb-1"><strong>Status:</strong> {{ refund.get_status_display }}</p>
+                                <p class="mb-0"><strong>Amount:</strong> &#8369;{{ refund.amount }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if damage_report %}
+                        <div class="alert alert-{% if damage_report.status == 'confirmed' %}warning{% elif damage_report.status == 'resolved' %}success{% else %}info{% endif %}">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Damage Report</h6>
+                            <p class="mb-1"><strong>Status:</strong> {{ damage_report.get_status_display }}</p>
+                            {% if damage_report.estimated_cost %}
+                                <p class="mb-0"><strong>Estimated Cost:</strong> &#8369;{{ damage_report.estimated_cost }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if time_remaining %}
+<script>
+    let totalSeconds = Math.floor({{ time_remaining.total_seconds }});
+
+    function updateCountdown() {
+        if (totalSeconds <= 0) {
+            document.getElementById('expirationAlert').innerHTML = '<div class="alert alert-danger mb-0"><strong>Booking Expired.</strong> Please create a new booking.</div>';
+            return;
+        }
+
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+
+        totalSeconds--;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
+{% endif %}
+{% endblock %}

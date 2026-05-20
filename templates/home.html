@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Rent2Ride{% endblock %}
+
+{% block extra_css %}
+    <!-- Flatpickr datepicker styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- Hero + Search Section (Book2wheel-style) -->
+<section class="hero-section">
+    <div class="container h-100 d-flex flex-column justify-content-center">
+        <div class="row align-items-center mb-4">
+            <div class="col-12 text-center">
+                <h1 class="hero-title mb-3">
+                    Marketplace for motorbike and car sharing
+                </h1>
+                <p class="hero-subtitle mb-0">
+                    Search, compare and book vehicles from trusted local owners.
+                </p>
+            </div>
+        </div>
+
+        <!-- Search card -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+                <form method="GET" action="{% url 'vehicle_list' %}">
+                    <div class="hero-search-card shadow-lg">
+                        <!-- Location -->
+                        <div class="hero-search-field">
+                            <div class="hero-field-header">
+                                <span class="hero-field-icon hero-field-icon-location">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </span>
+                                <span class="hero-field-label">Location</span>
+                            </div>
+                            <input type="text"
+                                   class="form-control hero-field-input"
+                                   name="location"
+                                   placeholder="Enter location"
+                                   value="{{ request.GET.location }}">
+                        </div>
+
+                        <div class="hero-search-divider d-none d-md-block"></div>
+
+                        <!-- Pick-up date -->
+                        <div class="hero-search-field">
+                            <div class="hero-field-header">
+                                <span class="hero-field-icon">
+                                    <i class="bi bi-calendar-event"></i>
+                                </span>
+                                <span class="hero-field-label">Pick-up date</span>
+                            </div>
+                            <input type="text"
+                                   class="form-control hero-field-input js-date-start"
+                                   name="start_date"
+                                   placeholder="Pick-up date"
+                                   autocomplete="off">
+                        </div>
+
+                        <div class="hero-search-divider d-none d-md-block"></div>
+
+                        <!-- Return date -->
+                        <div class="hero-search-field">
+                            <div class="hero-field-header">
+                                <span class="hero-field-icon">
+                                    <i class="bi bi-calendar-check"></i>
+                                </span>
+                                <span class="hero-field-label">Return date</span>
+                            </div>
+                            <input type="text"
+                                   class="form-control hero-field-input js-date-end"
+                                   name="end_date"
+                                   placeholder="Return date"
+                                   autocomplete="off">
+                        </div>
+
+                        <!-- Search button -->
+                        <div class="hero-search-action">
+                            <button type="submit" class="hero-search-btn-circle" aria-label="Search available vehicles">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Vehicles -->
+<section class="featured-vehicles py-5">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="mb-2">Featured Vehicles</h2>
+                <p class="text-muted mb-0">Handpicked listings with trusted owners and fast booking.</p>
+            </div>
+            <a href="{% url 'vehicle_list' %}" class="btn btn-outline-primary">Browse All Vehicles</a>
+        </div>
+        <div class="row g-3 g-md-4">
+            {% for vehicle in featured_vehicles %}
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if vehicle.image_url %}
+                            <img src="{{ vehicle.image_url.url }}" class="card-img-top" alt="{{ vehicle.model }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height:200px;"><i class="bi bi-car-front fs-1 opacity-50"></i></div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ vehicle.brand }} {{ vehicle.model }}</h5>
+                            <p class="text-muted">{{ vehicle.get_vehicle_type_display }}</p>
+                            <p class="card-text">{{ vehicle.description|truncatewords:20 }}</p>
+                            <p class="fw-bold text-primary">&#8369;{{ vehicle.price_per_day }}/day</p>
+                            <p class="text-muted"><i class="bi bi-geo-alt"></i> {{ vehicle.location }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-primary w-100">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <p class="text-center text-muted">No featured vehicles available at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Promotional Features Section -->
+<section class="promo-features-section py-5 position-relative">
+    <div class="container">
+        <!-- Main Title -->
+        <h2 class="promo-main-title text-center mb-5">What do we have to offer</h2>
+        
+        <div class="row promo-features-row">
+            <!-- Left Column -->
+            <div class="col-md-6 d-flex flex-column">
+                <!-- Variety of vehicles -->
+                <div class="promo-feature mb-5">
+                    <h3 class="promo-feature-title">Variety of vehicles</h3>
+                    <p class="promo-feature-text">
+                        If you're searching for a fully automatic scooter, an adventure-touring motorbike, or a spacious family car, you've come to the right place!
+                    </p>
+                </div>
+                
+                <!-- Affordable auto insurance -->
+                <div class="promo-feature mb-5">
+                    <h3 class="promo-feature-title">Affordable auto insurance</h3>
+                    <p class="promo-feature-text">
+                        Drive with a peace of mind by choosing one of our reliable rental insurance options
+                        <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8rem;"></i>
+                    </p>
+                </div>
+                
+                <!-- Become a host button (desktop) -->
+                <div class="promo-button-left mt-auto d-none d-md-block">
+                    <a href="{% url 'signup' %}" class="btn promo-btn-host">
+                        Become a host
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="col-md-6 d-flex flex-column">
+                <!-- Easy. Flexible. Safe. -->
+                <div class="promo-feature mb-5">
+                    <h3 class="promo-feature-title">Easy. Flexible. Safe.</h3>
+                    <p class="promo-feature-text">
+                        With our hassle-free and secure platform, renting and sharing your vehicle at any time is as easy as can be.
+                    </p>
+                </div>
+                
+                <!-- Become a host button (mobile - below Easy. Flexible. Safe.) -->
+                <div class="promo-button-mobile mb-4 d-md-none">
+                    <a href="{% url 'signup' %}" class="btn promo-btn-host w-100">
+                        Become a host
+                    </a>
+                </div>
+                
+                <!-- Rent a vehicle button -->
+                <div class="promo-button-right mt-auto">
+                    <a href="{% url 'vehicle_list' %}" class="btn promo-btn-vehicle">
+                        Rent a vehicle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thin solid orange horizontal line at bottom -->
+    <div class="promo-bottom-line"></div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Flatpickr datepicker -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startInput = document.querySelector('.js-date-start');
+            const endInput = document.querySelector('.js-date-end');
+
+            if (!startInput || !endInput) return;
+
+            const today = new Date();
+            const fourDaysLater = new Date();
+            fourDaysLater.setDate(today.getDate() + 4);
+
+            let endPicker;
+
+            const startPicker = flatpickr(startInput, {
+                dateFormat: "d M Y",
+                defaultDate: today,
+                minDate: "today",
+                onChange: function (selectedDates) {
+                    if (selectedDates[0] && endPicker) {
+                        endPicker.set('minDate', selectedDates[0]);
+                    }
+                }
+            });
+
+            endPicker = flatpickr(endInput, {
+                dateFormat: "d M Y",
+                defaultDate: fourDaysLater,
+                minDate: today
+            });
+        });
+    </script>
+{% endblock %}
+

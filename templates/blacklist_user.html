@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Blacklist User - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-x"></i> Blacklist User</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-4">
+                        <h6>User Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> {{ user.get_full_name|default:user.username }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+                        <p class="mb-0"><strong>Username:</strong> {{ user.username }}</p>
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Blacklisting this user will:
+                        <ul class="mb-0 mt-2">
+                            <li>Cancel all their pending and confirmed bookings</li>
+                            <li>Prevent them from making new bookings</li>
+                            <li>Block their access to booking features</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_reason" class="form-label">Reason for Blacklisting <span class="text-danger">*</span></label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                                <div class="text-danger">{{ form.reason.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Please provide a detailed reason for blacklisting this user.</small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">Confirm Blacklist</button>
+                            <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

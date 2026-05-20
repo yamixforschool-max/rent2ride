@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Compare Vehicles - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Compare Vehicles</h2>
+            <a href="{% url 'vehicle_list' %}" class="btn btn-outline-secondary">Back to Browse</a>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Feature</th>
+                    {% for vehicle in vehicles %}
+                        <th class="text-center">
+                            <div class="d-flex flex-column align-items-center">
+                                {% if vehicle.image_url %}
+                                    <img src="{{ vehicle.image_url.url }}" class="img-fluid mb-2" style="max-width: 150px; max-height: 100px; object-fit: cover;" alt="{{ vehicle.model }}">
+                                {% endif %}
+                                <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
+                                <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-sm btn-primary mt-2">View Details</a>
+                            </div>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Price per Day</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">
+                            <span class="fs-5 text-primary fw-bold">₱{{ vehicle.price_per_day }}</span>
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Vehicle Type</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">{{ vehicle.get_vehicle_type_display }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Location</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">
+                            <i class="bi bi-geo-alt"></i> {{ vehicle.location }}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Seats</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">
+                            <i class="bi bi-people"></i> {{ vehicle.seats }}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Fuel Type</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">{{ vehicle.get_fuel_type_display }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Transmission</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">{{ vehicle.get_transmission_type_display }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Rating</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">
+                            {% if vehicle.get_average_rating %}
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star{% if vehicle.get_average_rating >= i|add:0 %}-fill{% endif %} text-warning"></i>
+                                {% endfor %}
+                                <br><small>{{ vehicle.get_average_rating|floatformat:1 }}/5.0</small>
+                            {% else %}
+                                <span class="text-muted">No ratings yet</span>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Description</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">{{ vehicle.description|truncatewords:20 }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Action</strong></td>
+                    {% for vehicle in vehicles %}
+                        <td class="text-center">
+                            <a href="{% url 'booking' vehicle.id %}" class="btn btn-primary">Book Now</a>
+                        </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

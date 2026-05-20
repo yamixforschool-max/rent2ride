@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Vehicle - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add New Vehicle</h4>
+                </div>
+                <div class="card-body">
+                    {% if is_admin %}
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle"></i> <strong>Admin Mode:</strong> Vehicles added by admins are automatically approved and available for booking.
+                        </div>
+                    {% endif %}
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% if is_admin and users %}
+                            <div class="mb-3">
+                                <label for="owner" class="form-label">Vehicle Owner <span class="text-danger">*</span></label>
+                                <select class="form-control" id="owner" name="owner" required>
+                                    <option value="">-- Select Owner --</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }} ({{ user.email }})</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select the owner for this vehicle. The vehicle will be assigned to them.</small>
+                            </div>
+                        {% endif %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="id_brand" class="form-label">Brand</label>
+                                {{ form.brand }}
+                                {% if form.brand.errors %}
+                                    <div class="text-danger">{{ form.brand.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="id_model" class="form-label">Model</label>
+                                {{ form.model }}
+                                {% if form.model.errors %}
+                                    <div class="text-danger">{{ form.model.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="id_vehicle_type" class="form-label">Vehicle Type</label>
+                                {{ form.vehicle_type }}
+                                {% if form.vehicle_type.errors %}
+                                    <div class="text-danger">{{ form.vehicle_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="id_price_per_day" class="form-label">Price per Day (₱)</label>
+                                {{ form.price_per_day }}
+                                {% if form.price_per_day.errors %}
+                                    <div class="text-danger">{{ form.price_per_day.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_location" class="form-label">Location</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger">{{ form.location.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-4">
+                                <label for="id_seats" class="form-label">Number of Seats</label>
+                                {{ form.seats }}
+                                {% if form.seats.errors %}
+                                    <div class="text-danger">{{ form.seats.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="id_fuel_type" class="form-label">Fuel Type</label>
+                                {{ form.fuel_type }}
+                                {% if form.fuel_type.errors %}
+                                    <div class="text-danger">{{ form.fuel_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="id_transmission_type" class="form-label">Transmission Type</label>
+                                {{ form.transmission_type }}
+                                {% if form.transmission_type.errors %}
+                                    <div class="text-danger">{{ form.transmission_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="id_available_from" class="form-label">Available From</label>
+                                {{ form.available_from }}
+                                {% if form.available_from.errors %}
+                                    <div class="text-danger">{{ form.available_from.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="id_available_to" class="form-label">Available To</label>
+                                {{ form.available_to }}
+                                {% if form.available_to.errors %}
+                                    <div class="text-danger">{{ form.available_to.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_image_url" class="form-label">Vehicle Image</label>
+                            {{ form.image_url }}
+                            {% if form.image_url.errors %}
+                                <div class="text-danger">{{ form.image_url.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.instant_booking }}
+                                <label class="form-check-label" for="id_instant_booking">
+                                    <strong>Instant Booking</strong>
+                                    <small class="d-block text-muted">Allow renters to book this vehicle immediately without owner approval</small>
+                                </label>
+                            </div>
+                            {% if form.instant_booking.errors %}
+                                <div class="text-danger">{{ form.instant_booking.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% if not is_admin %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Your vehicle listing will be reviewed by an admin before being made available.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> This vehicle will be automatically approved and available for booking immediately.
+                            </div>
+                        {% endif %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if is_admin %}
+                                    <i class="bi bi-check-circle"></i> Add Vehicle (Auto-Approved)
+                                {% else %}
+                                    Submit for Approval
+                                {% endif %}
+                            </button>
+                            {% if is_admin %}
+                                <a href="{% url 'admin_vehicles' %}" class="btn btn-outline-secondary">Cancel</a>
+                            {% else %}
+                                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

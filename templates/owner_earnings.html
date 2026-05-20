@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}My Earnings - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <h2 class="mb-4"><i class="bi bi-cash-stack"></i> My Earnings</h2>
+    
+    <!-- Earnings Summary -->
+    <div class="row g-3 g-md-4 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Earnings</h5>
+                    <h2 class="mb-0">₱{{ total_earnings|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Paid Out</h5>
+                    <h2 class="mb-0">₱{{ paid_earnings|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Payout</h5>
+                    <h2 class="mb-0">₱{{ pending_earnings|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Earnings by Vehicle -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Earnings by Vehicle</h5>
+        </div>
+        <div class="card-body">
+            {% if vehicle_earnings %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Total Bookings</th>
+                                <th>Total Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in vehicle_earnings %}
+                                <tr>
+                                    <td>{{ vehicle.brand }} {{ vehicle.model }}</td>
+                                    <td><span class="badge bg-primary">{{ vehicle.total_bookings_count }}</span></td>
+                                    <td><strong>₱{{ vehicle.total_earnings_amount|default:0|floatformat:2 }}</strong></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No earnings data available yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Bookings -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Recent Completed Bookings</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_bookings %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Vehicle</th>
+                                <th>Renter</th>
+                                <th>Total Price</th>
+                                <th>Your Earnings</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>#{{ booking.id }}</td>
+                                    <td>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</td>
+                                    <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                                    <td>₱{{ booking.total_price|floatformat:2 }}</td>
+                                    <td><strong class="text-success">₱{{ booking.commission.owner_earnings|floatformat:2 }}</strong></td>
+                                    <td>{{ booking.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No completed bookings yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

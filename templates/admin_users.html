@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <h2 class="mb-4">Manage Users</h2>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.get_full_name|default:"-" }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.profile.phone_number|default:"-" }}</td>
+                                <td>
+                                    {% if user.profile.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% elif user.profile.is_owner %}
+                                        <span class="badge bg-primary">Owner</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Renter</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Blocked</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <form method="POST" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                                            {% if user.is_active %}
+                                                <button type="button" name="action" value="block" class="btn btn-sm btn-warning"
+                                                        data-confirm-modal="true"
+                                                        data-confirm-title="Block User"
+                                                        data-confirm-message="Are you sure you want to block this user?"
+                                                        data-confirm-label="Block User"
+                                                        data-confirm-variant="warning">Block</button>
+                                            {% else %}
+                                                <button type="button" name="action" value="unblock" class="btn btn-sm btn-success"
+                                                        data-confirm-modal="true"
+                                                        data-confirm-title="Unblock User"
+                                                        data-confirm-message="Are you sure you want to unblock this user?"
+                                                        data-confirm-label="Unblock User"
+                                                        data-confirm-variant="success">Unblock</button>
+                                            {% endif %}
+                                            <button type="button" name="action" value="delete" class="btn btn-sm btn-danger"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Delete User"
+                                                    data-confirm-message="Are you sure you want to permanently delete this user?"
+                                                    data-confirm-label="Delete User"
+                                                    data-confirm-variant="danger">Delete</button>
+                                        </form>
+                                        {% if not user.blacklist or not user.blacklist.is_active %}
+                                            <a href="{% url 'blacklist_user' user.id %}" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-person-x"></i> Blacklist
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'unblacklist_user' user.id %}" class="btn btn-sm btn-success">
+                                                <i class="bi bi-person-check"></i> Unblacklist
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No users found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

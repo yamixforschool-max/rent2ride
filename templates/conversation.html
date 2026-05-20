@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-chat-dots"></i> Conversation
+                        <small class="d-block mt-1 fs-6">Booking #{{ booking.id }} - {{ booking.vehicle.brand }} {{ booking.vehicle.model }}</small>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Booking Info -->
+                    <div class="alert alert-info mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Vehicle:</strong> {{ booking.vehicle.brand }} {{ booking.vehicle.model }}<br>
+                                <strong>Rental Period:</strong> {{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Other Party:</strong> {{ other_user.get_full_name|default:other_user.username }}<br>
+                                <strong>Status:</strong> <span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %}">{{ booking.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Messages -->
+                    <div class="messages-container mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                        {% for message in messages %}
+                            <div class="mb-3 {% if message.sender == request.user %}text-end{% endif %}">
+                                <div class="d-inline-block p-3 rounded {% if message.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
+                                    {% if message.subject %}
+                                        <strong>{{ message.subject }}</strong><br>
+                                    {% endif %}
+                                    {{ message.message }}
+                                    <br>
+                                    <small class="{% if message.sender == request.user %}text-white-50{% else %}text-muted{% endif %}">
+                                        {{ message.created_at|date:"M d, Y H:i" }}
+                                        {% if message.sender == request.user %}
+                                            {% if message.is_read %}
+                                                <i class="bi bi-check2-all"></i> Read
+                                            {% else %}
+                                                <i class="bi bi-check2"></i> Sent
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat fs-1"></i>
+                                <p class="mt-3">No messages yet. Start the conversation!</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Message Form -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger">{{ form.subject.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-2">
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                                <div class="text-danger">{{ form.message.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Send Message
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'messages_list' %}" class="btn btn-outline-secondary">Back to Messages</a>
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-secondary">View Booking</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Auto-scroll to bottom of messages
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>
+{% endblock %}
+{% endblock %}

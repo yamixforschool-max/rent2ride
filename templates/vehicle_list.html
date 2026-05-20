@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Vehicles - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+            <h2 class="mb-2">Browse Vehicles</h2>
+            <p class="text-muted mb-0">Use filters to quickly find the right vehicle for your trip.</p>
+        </div>
+        <span class="badge bg-light text-dark border">{{ vehicles|length }} result{{ vehicles|length|pluralize }}</span>
+    </div>
+    
+    <!-- Search Filters -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" action="{% url 'vehicle_list' %}">
+                <div class="row g-2 g-md-3">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" class="form-control" name="search" placeholder="Model, brand..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" name="location" placeholder="City, Province" value="{{ request.GET.location }}">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <label class="form-label">Vehicle Type</label>
+                        <select class="form-select" name="vehicle_type">
+                            <option value="">All Types</option>
+                            {% for value, label in vehicle_types %}
+                                <option value="{{ value }}" {% if request.GET.vehicle_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <label class="form-label">Fuel Type</label>
+                        <select class="form-select" name="fuel_type">
+                            <option value="">All</option>
+                            {% for value, label in fuel_types %}
+                                <option value="{{ value }}" {% if request.GET.fuel_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <label class="form-label">Transmission</label>
+                        <select class="form-select" name="transmission_type">
+                            <option value="">All</option>
+                            {% for value, label in transmission_types %}
+                                <option value="{{ value }}" {% if request.GET.transmission_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <label class="form-label">Min Seats</label>
+                        <input type="number" class="form-control" name="min_seats" placeholder="1" min="1" value="{{ request.GET.min_seats }}">
+                    </div>
+                </div>
+                <div class="row g-2 g-md-3 mt-2">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label">Min Price</label>
+                        <input type="number" class="form-control" name="min_price" placeholder="&#8369;0" value="{{ request.GET.min_price }}">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label">Max Price</label>
+                        <input type="number" class="form-control" name="max_price" placeholder="&#8369;0" value="{{ request.GET.max_price }}">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="{% url 'vehicle_list' %}" class="btn btn-outline-secondary">Clear</a>
+                        {% if user.is_authenticated %}
+                            <button type="button" class="btn btn-outline-primary" id="compareBtn" onclick="compareSelected()" disabled>
+                                Compare Selected
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Vehicle List -->
+    <div class="row g-3 g-md-4">
+        {% for vehicle in vehicles %}
+            <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    {% if vehicle.image_url %}
+                        <img src="{{ vehicle.image_url.url }}" class="card-img-top" alt="{{ vehicle.model }}" style="height: 250px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x250/cccccc/666666?text=No+Image" class="card-img-top" alt="No Image" style="height: 250px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ vehicle.brand }} {{ vehicle.model }}</h5>
+                        <p class="text-muted mb-2">
+                            <span class="badge bg-info">{{ vehicle.get_vehicle_type_display }}</span>
+                        </p>
+                        <p class="card-text">{{ vehicle.description|truncatewords:15 }}</p>
+                        <p class="fw-bold text-primary fs-5">&#8369;{{ vehicle.price_per_day }}/day</p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-geo-alt"></i> {{ vehicle.location }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'vehicle_detail' vehicle.id %}" class="btn btn-primary">View Details</a>
+                            {% if user.is_authenticated %}
+                                <div class="form-check">
+                                    <input class="form-check-input compare-checkbox" type="checkbox" value="{{ vehicle.id }}" id="compare{{ vehicle.id }}" name="compare_vehicle">
+                                    <label class="form-check-label" for="compare{{ vehicle.id }}">
+                                        Compare
+                                    </label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h5>No vehicles found</h5>
+                    <p>Try adjusting your search filters.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function updateCompareButton() {
+        const selected = document.querySelectorAll('input[name="compare_vehicle"]:checked').length;
+        const compareBtn = document.getElementById('compareBtn');
+        if (!compareBtn) return;
+        compareBtn.disabled = selected < 2;
+    }
+
+    function compareSelected() {
+        const checkboxes = document.querySelectorAll('input[name="compare_vehicle"]:checked');
+        const vehicleIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (vehicleIds.length < 2) {
+            alert('Please select at least 2 vehicles to compare.');
+            return;
+        }
+        
+        if (vehicleIds.length > 3) {
+            alert('You can compare up to 3 vehicles. Please select only 3.');
+            return;
+        }
+        
+        const url = new URL('{% url "compare_vehicles" %}', window.location.origin);
+        vehicleIds.forEach(id => url.searchParams.append('vehicles', id));
+        window.location.href = url.toString();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const compareCheckboxes = document.querySelectorAll('.compare-checkbox');
+        compareCheckboxes.forEach(cb => cb.addEventListener('change', updateCompareButton));
+        updateCompareButton();
+    });
+</script>
+{% endblock %}
+{% endblock %}
+
+

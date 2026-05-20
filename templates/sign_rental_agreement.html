@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Rental Agreement - Rent2Ride{% endblock %}
+
+{% block extra_css %}
+<style>
+    .signature-pad {
+        border: 2px solid #dee2e6;
+        border-radius: 0.375rem;
+        background: white;
+        cursor: crosshair;
+    }
+    #signatureCanvas {
+        width: 100%;
+        height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Rental Agreement</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6>Contract Number: {{ agreement.contract_number }}</h6>
+                        <p class="mb-0">Please review and sign the rental agreement below.</p>
+                    </div>
+                    
+                    <!-- Agreement Terms -->
+                    <div class="mb-4 p-3 border rounded">
+                        <h6>Rental Agreement Terms</h6>
+                        <p><strong>Renter:</strong> {{ booking.user.get_full_name|default:booking.user.username }}</p>
+                        <p><strong>Vehicle:</strong> {{ booking.vehicle.brand }} {{ booking.vehicle.model }}</p>
+                        <p><strong>Owner:</strong> {{ booking.vehicle.owner.get_full_name|default:booking.vehicle.owner.username }}</p>
+                        <p><strong>Rental Period:</strong> {{ booking.start_date|date:"M d, Y H:i" }} to {{ booking.end_date|date:"M d, Y H:i" }}</p>
+                        <p><strong>Total Amount:</strong> ₱{{ booking.total_price }}</p>
+                        <hr>
+                        <p><strong>Terms and Conditions:</strong></p>
+                        <p>{{ agreement.terms_and_conditions }}</p>
+                        <ul>
+                            <li>Renter is responsible for the vehicle during the rental period</li>
+                            <li>Any damages will be charged to the renter</li>
+                            <li>Late returns will incur penalties</li>
+                            <li>Vehicle must be returned in the same condition</li>
+                            <li>All traffic violations are the renter's responsibility</li>
+                        </ul>
+                    </div>
+                    
+                    {% if agreement.status == 'signed' %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Agreement signed on {{ agreement.renter_signed_at|date:"M d, Y H:i" }}
+                            {% if agreement.pdf_file %}
+                                <br><a href="{{ agreement.pdf_file.url }}" target="_blank" class="alert-link">
+                                    <i class="bi bi-file-pdf"></i> Download PDF Agreement
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'payment' booking.id %}" class="btn btn-primary btn-lg">Proceed to Payment</a>
+                            {% if agreement.pdf_file %}
+                                <a href="{{ agreement.pdf_file.url }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-download"></i> Download Agreement PDF
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <form method="POST" id="agreementForm">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label">Signature <span class="text-danger">*</span></label>
+                                <div class="signature-pad">
+                                    <canvas id="signatureCanvas"></canvas>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSignature()">Clear</button>
+                                </div>
+                                <input type="hidden" name="signature" id="signatureInput" required>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.agreed_to_terms }}
+                                    <label class="form-check-label" for="id_agreed_to_terms">
+                                        I agree to the terms and conditions stated above <span class="text-danger">*</span>
+                                    </label>
+                                </div>
+                                {% if form.agreed_to_terms.errors %}
+                                    <div class="text-danger">{{ form.agreed_to_terms.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">Sign Agreement</button>
+                                <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.9/dist/signature_pad.umd.min.js"></script>
+<script>
+    const canvas = document.getElementById('signatureCanvas');
+    const signaturePad = new SignaturePad(canvas);
+    
+    function clearSignature() {
+        signaturePad.clear();
+        document.getElementById('signatureInput').value = '';
+    }
+    
+    document.getElementById('agreementForm').addEventListener('submit', function(e) {
+        if (signaturePad.isEmpty()) {
+            e.preventDefault();
+            alert('Please provide your signature.');
+            return false;
+        }
+        document.getElementById('signatureInput').value = signaturePad.toDataURL();
+    });
+    
+    // Resize canvas
+    function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        signaturePad.clear();
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+</script>
+{% endblock %}
+{% endblock %}

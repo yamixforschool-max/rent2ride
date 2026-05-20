@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Vehicle Utilization - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Vehicle Utilization Analytics</h2>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Vehicles</h6>
+                    <h3>{{ total_vehicles }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Total Days Rented</h6>
+                    <h3>{{ total_days_rented }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Revenue</h6>
+                    <h3>₱{{ total_revenue|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6>Avg Utilization</h6>
+                    <h3>{{ avg_utilization|floatformat:1 }}%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Utilization Table -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">Vehicle Utilization Details - {{ month|date:"F Y" }}</h5>
+        </div>
+        <div class="card-body">
+            {% if utilizations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Owner</th>
+                                <th>Days Rented</th>
+                                <th>Idle Days</th>
+                                <th>Utilization %</th>
+                                <th>Revenue</th>
+                                <th>Suggested Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for util in utilizations %}
+                                <tr>
+                                    <td>{{ util.vehicle.brand }} {{ util.vehicle.model }}</td>
+                                    <td>{{ util.vehicle.owner.username }}</td>
+                                    <td>{{ util.days_rented }}</td>
+                                    <td>{{ util.idle_days }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if util.utilization_percentage >= 70 %}bg-success{% elif util.utilization_percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" style="width: {{ util.utilization_percentage }}%">
+                                                {{ util.utilization_percentage|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₱{{ util.total_revenue|floatformat:2 }}</td>
+                                    <td>
+                                        {% if util.suggested_price %}
+                                            ₱{{ util.suggested_price|floatformat:2 }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <p>No utilization data available for this month.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

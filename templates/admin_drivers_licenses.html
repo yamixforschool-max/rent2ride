@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Driver License Verification (Renter) - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-card-text"></i> Driver License Verification (Renter)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <form method="GET" class="d-flex gap-2">
+                            <select name="status" class="form-select" style="max-width: 200px;">
+                                <option value="">All Statuses</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="verified" {% if request.GET.status == 'verified' %}selected{% endif %}>Verified</option>
+                                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{% url 'admin_drivers_licenses' %}" class="btn btn-outline-secondary">Clear</a>
+                        </form>
+                    </div>
+
+                    {% if licenses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Renter</th>
+                                        <th>License Number</th>
+                                        <th>Expiration Date</th>
+                                        <th>Status</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for license in licenses %}
+                                        <tr>
+                                            <td>
+                                                {{ license.user.get_full_name|default:license.user.username }}<br>
+                                                <small class="text-muted">{{ license.user.email }}</small>
+                                            </td>
+                                            <td>{{ license.license_number }}</td>
+                                            <td>
+                                                {{ license.expiration_date|date:"M d, Y" }}
+                                                {% if license.is_expired %}
+                                                    <br><span class="badge bg-danger">Expired</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if license.status == 'verified' %}success{% elif license.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                                    {{ license.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ license.uploaded_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if license.status == 'pending' %}
+                                                    <form method="POST" action="{% url 'verify_drivers_license' license.id %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success">
+                                                            <i class="bi bi-check-circle"></i> Accept to Verify
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{% url 'verify_drivers_license' license.id %}" class="d-inline ms-1">
+                                                        {% csrf_token %}
+                                                        <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">
+                                                            <i class="bi bi-x-circle"></i> Reject
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <a href="{% url 'verify_drivers_license' license.id %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <h5 class="mt-3">No License Verifications</h5>
+                            <p>There are no driver's licenses matching your criteria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

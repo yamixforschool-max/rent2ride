@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Payments - Rent2Ride{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5 admin-shell">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+            <h2 class="mb-2">Payment Transactions</h2>
+            <p class="text-muted mb-0">Review payment outcomes and resolve pending transactions.</p>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2">{{ payments|length }} transaction{{ payments|length|pluralize }}</span>
+    </div>
+
+    <div class="mb-3">
+        {% with status=request.GET.status %}
+        <div class="d-grid d-md-flex gap-2">
+            <a href="{% url 'admin_payments' %}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-outline-primary{% endif %}">All Payments</a>
+            <a href="{% url 'admin_payments' %}?status=pending" class="btn btn-sm {% if status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">Pending</a>
+            <a href="{% url 'admin_payments' %}?status=success" class="btn btn-sm {% if status == 'success' %}btn-success{% else %}btn-outline-success{% endif %}">Success</a>
+            <a href="{% url 'admin_payments' %}?status=failed" class="btn btn-sm {% if status == 'failed' %}btn-danger{% else %}btn-outline-danger{% endif %}">Failed</a>
+        </div>
+        {% endwith %}
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <caption class="visually-hidden">Payment transactions with booking, user, amount, status, and approval actions.</caption>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Booking ID</th>
+                            <th>User</th>
+                            <th>Vehicle</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.transaction_id }}</td>
+                                <td>#{{ payment.booking.id }}</td>
+                                <td>{{ payment.booking.user.username }}</td>
+                                <td>{{ payment.booking.vehicle.brand }} {{ payment.booking.vehicle.model }}</td>
+                                <td>&#8369;{{ payment.payment_amount }}</td>
+                                <td>
+                                    <span class="badge bg-{% if payment.payment_status == 'success' %}success{% elif payment.payment_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                        {{ payment.get_payment_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if payment.payment_status == 'pending' %}
+                                        <form method="POST" class="d-flex flex-wrap gap-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="payment_id" value="{{ payment.id }}">
+                                            <button type="button" name="action" value="approve" class="btn btn-sm btn-success"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Approve Payment"
+                                                    data-confirm-message="Approve this payment transaction?"
+                                                    data-confirm-label="Approve Payment"
+                                                    data-confirm-variant="success">
+                                                <i class="bi bi-check-circle"></i> Approve
+                                            </button>
+                                            <button type="button" name="action" value="reject" class="btn btn-sm btn-danger"
+                                                    data-confirm-modal="true"
+                                                    data-confirm-title="Reject Payment"
+                                                    data-confirm-message="Are you sure you want to reject this payment transaction?"
+                                                    data-confirm-label="Reject Payment"
+                                                    data-confirm-variant="danger">
+                                                <i class="bi bi-x-circle"></i> Reject
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">No actions</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">No payments found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
