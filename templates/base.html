@@ -72,7 +72,7 @@
                         </a>
                             {% endif %}
 
-                            {% if user.profile.is_admin %}
+                            {% if user.profile.is_admin or user.is_superuser %}
                         <div class="mobile-sidebar-section-title">Admin</div>
                         <a href="{% url 'admin_dashboard' %}" class="mobile-sidebar-item" aria-label="Admin dashboard" role="menuitem">
                             <i class="bi bi-grid-1x2"></i>
