@@ -41,6 +41,7 @@ urlpatterns = [
     path('owner/earnings/', views.owner_earnings_view, name='owner_earnings'),
     path('upload-license/', views.upload_drivers_license_view, name='upload_drivers_license'),
     path('manage/licenses/', views.admin_drivers_licenses_view, name='admin_drivers_licenses'),
+    path('manage/identity-verifications/', views.admin_identity_verifications_view, name='admin_identity_verifications'),
     path('manage/licenses/<int:license_id>/verify/', views.verify_drivers_license_view, name='verify_drivers_license'),
     path('manage/users/<int:user_id>/blacklist/', views.blacklist_user_view, name='blacklist_user'),
     path('manage/users/<int:user_id>/unblacklist/', views.unblacklist_user_view, name='unblacklist_user'),

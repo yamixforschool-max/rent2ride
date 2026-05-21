@@ -849,8 +849,9 @@ def admin_dashboard_view(request):
     pending_vehicles      = Vehicle.objects.filter(status='pending_approval').count()
     pending_bookings      = Booking.objects.filter(status='pending').count()
     license_verifications = DriversLicense.objects.filter(status='pending').count()
+    id_verifications      = IdentityVerification.objects.filter(status='pending').count()
     new_users_30d         = User.objects.filter(date_joined__gte=thirty_ago).count()
-    pending_count         = pending_vehicles + pending_bookings + license_verifications
+    pending_count         = pending_vehicles + pending_bookings + license_verifications + id_verifications
 
     total_revenue = Payment.objects.filter(payment_status='success').aggregate(
         t=Sum('payment_amount'))['t'] or 0
@@ -899,6 +900,7 @@ def admin_dashboard_view(request):
         'pending_vehicles':      pending_vehicles,
         'pending_bookings':      pending_bookings,
         'license_verifications': license_verifications,
+        'id_verifications':      id_verifications,
         'new_users_30d':         new_users_30d,
         'total_users':           total_users,
         'total_vehicles':        total_vehicles,
@@ -1094,6 +1096,15 @@ def identity_verification_view(request):
             verification.user = request.user
             verification.status = 'pending'
             verification.save()
+            # Notify admin via AuditLog
+            admin_users = User.objects.filter(is_superuser=True)
+            for admin in admin_users:
+                AuditLog.objects.create(
+                    admin_user=admin,
+                    action_type='license_verified',
+                    target_user=request.user,
+                    description=f'ID verification submitted by {request.user.username} — awaiting review.',
+                )
             messages.success(request, 'Identity document uploaded successfully. Waiting for admin approval.')
             return redirect('identity_verification')
     else:
@@ -1670,6 +1681,47 @@ def admin_drivers_licenses_view(request):
         'licenses': licenses,
     }
     return render(request, 'admin_drivers_licenses.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_identity_verifications_view(request):
+    """Admin view all identity verifications with document access"""
+    verifications = IdentityVerification.objects.select_related('user').order_by('-submitted_at')
+
+    status_filter = request.GET.get('status')
+    if status_filter:
+        verifications = verifications.filter(status=status_filter)
+
+    if request.method == 'POST':
+        v_id = request.POST.get('verification_id')
+        action = request.POST.get('action')
+        rejection_reason = request.POST.get('rejection_reason', '')
+        try:
+            v = IdentityVerification.objects.get(id=v_id)
+            if action == 'approve':
+                v.status = 'approved'
+                v.reviewed_by = request.user
+                v.reviewed_at = timezone.now()
+                v.save()
+                if hasattr(v.user, 'profile'):
+                    v.user.profile.is_verified = True
+                    v.user.profile.verified_badge = True
+                    v.user.profile.save()
+                messages.success(request, f'{v.user.username} identity approved.')
+            elif action == 'reject':
+                v.status = 'rejected'
+                v.rejection_reason = rejection_reason
+                v.reviewed_by = request.user
+                v.reviewed_at = timezone.now()
+                v.save()
+                messages.warning(request, f'{v.user.username} identity rejected.')
+        except IdentityVerification.DoesNotExist:
+            messages.error(request, 'Verification not found.')
+        return redirect('admin_identity_verifications')
+
+    context = {'verifications': verifications, 'status_filter': status_filter}
+    return render(request, 'admin_identity_verifications.html', context)
 
 
 # 2. BLACKLIST SYSTEM

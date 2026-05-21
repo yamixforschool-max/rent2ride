@@ -125,9 +125,9 @@
       <div class="slabel">Pending Bookings</div>
       <div class="svalue">{{ pending_bookings }}</div>
     </div>
-    <div class="stat-card">
-      <div class="slabel">License Verifications</div>
-      <div class="svalue">{{ license_verifications }}</div>
+    <div class="stat-card" style="cursor:pointer" onclick="location.href='{% url 'admin_identity_verifications' %}'">
+      <div class="slabel">ID Verifications</div>
+      <div class="svalue">{{ id_verifications }}</div>
     </div>
     <div class="stat-card">
       <div class="slabel">New Users (30d)</div>
@@ -232,6 +232,7 @@
       <a href="{% url 'manage_refunds' %}" class="qa-btn qa-red">&#8635; Manage Refunds</a>
     </div>
     <div class="qa-btns">
+      <a href="{% url 'admin_identity_verifications' %}" class="qa-btn qa-outline">&#128100; ID Verifications</a>
       <a href="{% url 'admin_drivers_licenses' %}" class="qa-btn qa-outline">&#128196; Driver's Licenses</a>
       <a href="{% url 'manage_payouts' %}" class="qa-btn qa-outline">&#128184; Payout Requests</a>
       <a href="{% url 'vehicle_utilization' %}" class="qa-btn qa-outline-blue">&#128200; Utilization</a>
