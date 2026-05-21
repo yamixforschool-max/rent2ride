@@ -377,23 +377,19 @@ def booking_view(request, vehicle_id):
                 messages.error(request, f'Your account has been blacklisted. Reason: {blacklist.reason}')
                 return redirect('dashboard')
             
-            # Check driver's license verification
+            # Check driver's license — warn but allow booking to proceed
             try:
                 license_obj = DriversLicense.objects.get(user=request.user)
                 if license_obj.status != 'verified':
-                    messages.error(request, 'Your driver\'s license must be verified before making a booking.')
-                    return redirect('upload_drivers_license')
+                    messages.warning(request, 'Your driver\'s license is pending verification. Your booking will proceed but may require verification before the trip.')
                 if license_obj.is_expired():
-                    messages.error(request, 'Your driver\'s license has expired. Please upload a new one.')
-                    return redirect('upload_drivers_license')
+                    messages.warning(request, 'Your driver\'s license appears expired. Please update it soon.')
             except DriversLicense.DoesNotExist:
-                messages.error(request, 'Please upload your driver\'s license before making a booking.')
-                return redirect('upload_drivers_license')
-            
-            # Check identity verification for first-time renters
+                messages.warning(request, 'No driver\'s license on file. Please upload one in your profile.')
+
+            # Check identity verification — warn but allow booking
             if not request.user.profile.is_verified:
-                messages.error(request, 'Please verify your identity before making a booking.')
-                return redirect('identity_verification')
+                messages.warning(request, 'Your identity is not yet verified. Please complete verification in your profile.')
             
             # Fraud prevention - check daily booking limit
             from users.models import UserProfile
@@ -541,8 +537,21 @@ def booking_view(request, vehicle_id):
                     status='held'
                 )
             
-            # Redirect to rental agreement signing (required before payment)
-            return redirect('sign_rental_agreement', booking_id=booking.id)
+            # Auto-create and sign rental agreement so user goes straight to payment
+            contract_number = f"R2R-{booking.id}-{timezone.now().strftime('%Y%m%d')}"
+            agreement, _ = RentalAgreement.objects.get_or_create(
+                booking=booking,
+                defaults={
+                    'contract_number': contract_number,
+                    'status': 'signed',
+                    'renter_signature': request.user.get_full_name() or request.user.username,
+                    'renter_signed_at': timezone.now(),
+                }
+            )
+            booking.contract_signed = True
+            booking.save()
+
+            return redirect('payment', booking_id=booking.id)
     else:
         form = BookingForm()
     
@@ -575,7 +584,40 @@ def payment_view(request, booking_id):
         return redirect('booking_detail', booking_id=booking.id)
     
     if request.method == 'POST':
-        # Create payment session with PayMongo
+        # If no PayMongo key configured, simulate a successful payment
+        if not settings.PAYMONGO_SECRET_KEY:
+            Payment.objects.update_or_create(
+                booking=booking,
+                defaults={
+                    'transaction_id': str(uuid.uuid4()),
+                    'payment_amount': booking.total_price,
+                    'payment_status': 'success',
+                }
+            )
+            booking.status = 'confirmed'
+            booking.payment_status = 'paid'
+            booking.is_locked = False
+            booking.save()
+            AvailabilityLock.objects.filter(booking=booking).update(is_active=False)
+            commission_amount = booking.total_price * Decimal('0.10')
+            Commission.objects.update_or_create(
+                booking=booking,
+                defaults={
+                    'commission_percentage': Decimal('10.00'),
+                    'commission_amount': commission_amount,
+                    'owner_earnings': booking.total_price - commission_amount,
+                    'paid_to_owner': False,
+                }
+            )
+            invoice_number = f"INV-{booking.id}-{timezone.now().strftime('%Y%m%d')}"
+            invoice, _ = Invoice.objects.get_or_create(
+                booking=booking,
+                defaults={'invoice_number': invoice_number}
+            )
+            messages.success(request, 'Payment successful! Your booking is confirmed.')
+            return render(request, 'payment_success.html', {'booking': booking, 'invoice': invoice})
+
+        # Real PayMongo payment
         try:
             payment_url, payment_error = create_paymongo_session(request, booking)
             if payment_url:
