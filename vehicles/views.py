@@ -870,10 +870,10 @@ def admin_dashboard_view(request):
         chart_data.append(float(rev))
 
     most_rented_vehicles = [
-        {'name': v['name'], 'owner': v['owner__username'], 'bookings': v['bc']}
+        {'name': f"{v['brand']} {v['model']}", 'owner': v['owner__username'], 'bookings': v['bc']}
         for v in Vehicle.objects.annotate(
             bc=Count('bookings', filter=Q(bookings__status='completed'))
-        ).order_by('-bc').values('name', 'owner__username', 'bc')[:10]
+        ).order_by('-bc').values('brand', 'model', 'owner__username', 'bc')[:10]
     ]
 
     active_locations = [
@@ -890,7 +890,7 @@ def admin_dashboard_view(request):
     ]
 
     recent_vehicles = [
-        {'model': v.name, 'owner': v.owner.username, 'status': v.status}
+        {'model': f"{v.brand} {v.model}", 'owner': v.owner.username, 'status': v.status}
         for v in Vehicle.objects.select_related('owner').order_by('-created_at')[:5]
     ]
 
