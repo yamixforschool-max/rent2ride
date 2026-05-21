@@ -826,101 +826,92 @@ def booking_detail_view(request, booking_id):
 
 
 def is_admin(user):
-    """Check if user is admin"""
-    return user.is_authenticated and hasattr(user, 'profile') and user.profile.is_admin
+    return user.is_authenticated and (
+        user.is_superuser or (hasattr(user, 'profile') and user.profile.is_admin)
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
-    """Enhanced admin dashboard with analytics"""
     from django.contrib.auth.models import User
-    from django.db.models import Sum, Count, Avg, Q
+    from django.db.models import Sum, Count, Q
     from django.utils import timezone
     from datetime import timedelta
-    from users.models import UserProfile
-    
-    # Basic stats
-    total_users = User.objects.count()
+
+    now = timezone.now()
+    thirty_ago = now - timedelta(days=30)
+
+    total_users    = User.objects.count()
     total_vehicles = Vehicle.objects.count()
     total_bookings = Booking.objects.count()
-    pending_vehicles = Vehicle.objects.filter(status='pending_approval').count()
-    pending_bookings = Booking.objects.filter(status='pending').count()
-    pending_verifications = IdentityVerification.objects.filter(status='pending').count()
-    
-    # Revenue analytics
+
+    pending_vehicles      = Vehicle.objects.filter(status='pending_approval').count()
+    pending_bookings      = Booking.objects.filter(status='pending').count()
+    license_verifications = DriversLicense.objects.filter(status='pending').count()
+    new_users_30d         = User.objects.filter(date_joined__gte=thirty_ago).count()
+    pending_count         = pending_vehicles + pending_bookings + license_verifications
+
     total_revenue = Payment.objects.filter(payment_status='success').aggregate(
-        total=Sum('payment_amount')
-    )['total'] or 0
-    
-    # Monthly revenue (last 6 months)
-    monthly_revenue = []
+        t=Sum('payment_amount'))['t'] or 0
+    avg_per_booking = (float(total_revenue) / total_bookings) if total_bookings else 0
+    completed       = Booking.objects.filter(status='completed').count()
+    completion_rate = (completed / total_bookings * 100) if total_bookings else 0
+
+    chart_labels = []
+    chart_data   = []
     for i in range(5, -1, -1):
-        month_start = timezone.now().replace(day=1) - timedelta(days=30*i)
-        month_end = month_start + timedelta(days=30)
-        revenue = Payment.objects.filter(
-            payment_status='success',
-            created_at__gte=month_start,
-            created_at__lt=month_end
-        ).aggregate(total=Sum('payment_amount'))['total'] or 0
-        monthly_revenue.append({
-            'month': month_start.strftime('%b %Y'),
-            'revenue': float(revenue)
-        })
-    
-    # Commission stats
-    total_commissions = Commission.objects.aggregate(
-        total=Sum('commission_amount')
-    )['total'] or 0
-    
-    unpaid_commissions = Commission.objects.filter(paid_to_owner=False).aggregate(
-        total=Sum('commission_amount')
-    )['total'] or 0
-    
-    # Most rented vehicles
-    most_rented = Vehicle.objects.annotate(
-        booking_count=Count('bookings', filter=Q(bookings__status='completed'))
-    ).order_by('-booking_count')[:5]
-    
-    # Most active locations
-    most_active_locations = Vehicle.objects.values('location').annotate(
-        vehicle_count=Count('id'),
-        booking_count=Count('bookings', filter=Q(bookings__status='completed'))
-    ).order_by('-booking_count')[:5]
-    
-    # User growth (last 30 days)
-    user_growth = User.objects.filter(
-        date_joined__gte=timezone.now() - timedelta(days=30)
-    ).count()
-    
-    # Payment success rate
-    total_payments = Payment.objects.count()
-    successful_payments = Payment.objects.filter(payment_status='success').count()
-    success_rate = (successful_payments / total_payments * 100) if total_payments > 0 else 0
-    
-    # Recent bookings
-    recent_bookings = Booking.objects.select_related('user', 'vehicle').order_by('-created_at')[:10]
-    
-    # Recent vehicles
-    recent_vehicles = Vehicle.objects.select_related('owner').order_by('-created_at')[:10]
-    
+        ms = now.replace(day=1) - timedelta(days=30 * i)
+        me = ms + timedelta(days=30)
+        rev = Payment.objects.filter(
+            payment_status='success', created_at__gte=ms, created_at__lt=me
+        ).aggregate(t=Sum('payment_amount'))['t'] or 0
+        chart_labels.append(ms.strftime('%b %Y'))
+        chart_data.append(float(rev))
+
+    most_rented_vehicles = [
+        {'name': v['name'], 'owner': v['owner__username'], 'bookings': v['bc']}
+        for v in Vehicle.objects.annotate(
+            bc=Count('bookings', filter=Q(bookings__status='completed'))
+        ).order_by('-bc').values('name', 'owner__username', 'bc')[:10]
+    ]
+
+    active_locations = [
+        {'name': loc['location'], 'vehicles': loc['vc'], 'bookings': loc['bc']}
+        for loc in Vehicle.objects.values('location').annotate(
+            vc=Count('id'),
+            bc=Count('bookings', filter=Q(bookings__status='completed'))
+        ).order_by('-bc')[:10]
+    ]
+
+    recent_bookings = [
+        {'id': b.id, 'user': b.user.username, 'vehicle': str(b.vehicle), 'status': b.status}
+        for b in Booking.objects.select_related('user', 'vehicle').order_by('-created_at')[:5]
+    ]
+
+    recent_vehicles = [
+        {'model': v.name, 'owner': v.owner.username, 'status': v.status}
+        for v in Vehicle.objects.select_related('owner').order_by('-created_at')[:5]
+    ]
+
     context = {
-        'total_users': total_users,
-        'total_vehicles': total_vehicles,
-        'total_bookings': total_bookings,
-        'pending_vehicles': pending_vehicles,
-        'pending_bookings': pending_bookings,
-        'pending_verifications': pending_verifications,
-        'total_revenue': total_revenue,
-        'monthly_revenue': json.dumps(monthly_revenue),
-        'total_commissions': total_commissions,
-        'unpaid_commissions': unpaid_commissions,
-        'most_rented': most_rented,
-        'most_active_locations': most_active_locations,
-        'user_growth': user_growth,
-        'success_rate': round(success_rate, 2),
-        'recent_bookings': recent_bookings,
-        'recent_vehicles': recent_vehicles,
+        'pending_count':         pending_count,
+        'pending_vehicles':      pending_vehicles,
+        'pending_bookings':      pending_bookings,
+        'license_verifications': license_verifications,
+        'new_users_30d':         new_users_30d,
+        'total_users':           total_users,
+        'total_vehicles':        total_vehicles,
+        'total_bookings':        total_bookings,
+        'total_revenue':         total_revenue,
+        'avg_per_booking':       avg_per_booking,
+        'completion_rate':       completion_rate,
+        'chart_labels':          json.dumps(chart_labels),
+        'chart_data':            json.dumps(chart_data),
+        'most_rented_vehicles':  most_rented_vehicles,
+        'active_locations':      active_locations,
+        'recent_bookings':       recent_bookings,
+        'recent_vehicles':       recent_vehicles,
     }
     return render(request, 'admin_dashboard.html', context)
 

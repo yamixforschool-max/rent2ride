@@ -1,335 +1,344 @@
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Rent2Ride</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f4; color: #1a3a3a; }
+  .topbar { background: #0d6e6e; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 50px; }
+  .topbar-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 17px; color: #fff; text-decoration: none; }
+  .topbar-brand svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.8; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 14px; }
+  .btn-logout { background: transparent; border: 1.5px solid #fff; color: #fff; padding: 5px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background .2s; }
+  .btn-logout:hover { background: rgba(255,255,255,0.15); }
+  .ticker { background: #b2dede; text-align: center; font-size: 13px; padding: 7px 12px; color: #0a4f4f; }
+  .main { padding: 24px; max-width: 1280px; margin: 0 auto; }
+  .dash-header { background: linear-gradient(135deg, #e6f5f5 0%, #f5fdfd 100%); border: 0.5px solid #c8e6e6; border-radius: 14px; padding: 22px 26px; margin-bottom: 22px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .dash-header h1 { font-size: 24px; font-weight: 600; color: #0a4040; }
+  .dash-header p { font-size: 13px; color: #4a7070; margin-top: 5px; }
+  .pending-badge { background: #fff; border: 0.5px solid #c0e0e0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 500; color: #0a4040; text-decoration: none; white-space: nowrap; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card { background: #fff; border-radius: 10px; border: 0.5px solid #d4e8e8; padding: 16px 20px; }
+  .stat-card .slabel { font-size: 11px; font-weight: 600; color: #6a9090; letter-spacing: .6px; text-transform: uppercase; }
+  .stat-card .svalue { font-size: 30px; font-weight: 600; color: #0a4040; margin-top: 6px; }
+  .sec-title { font-size: 18px; font-weight: 600; color: #0a4040; }
+  .sec-sub { font-size: 13px; color: #4a7070; margin-top: 3px; margin-bottom: 16px; }
+  .ops-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .ops-card { background: #fff; border-radius: 12px; border: 0.5px solid #d4e8e8; padding: 20px; }
+  .ops-card .obig { font-size: 36px; font-weight: 600; color: #0a4040; }
+  .ops-card .osub { font-size: 12px; color: #6a9090; margin-top: 4px; }
+  .ops-card .otitle { font-size: 14px; font-weight: 600; color: #0a4040; margin-bottom: 6px; }
+  .ops-card .odetail { font-size: 12px; color: #6a9090; margin-top: 6px; }
+  .odetail strong { color: #0a4040; }
+  .rev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+  .rev-card { background: #fff; border-radius: 10px; border: 0.5px solid #d4e8e8; padding: 16px 20px; }
+  .rev-card .rlabel { font-size: 12px; color: #6a9090; margin-bottom: 5px; }
+  .rev-card .rvalue { font-size: 22px; font-weight: 600; color: #0a4040; }
+  .chart-box { background: #0d6e6e; border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; }
+  .chart-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .chart-box-header .ctitle { color: #fff; font-size: 14px; font-weight: 600; }
+  .chart-box-header .ctrend { color: #a0d4d4; font-size: 12px; }
+  .chart-box canvas { display: block; width: 100% !important; height: 180px !important; }
+  .tables-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+  .tbl-box { background: #fff; border-radius: 12px; border: 0.5px solid #d4e8e8; overflow: hidden; }
+  .tbl-head { background: #0d6e6e; color: #fff; padding: 13px 18px; font-size: 13px; font-weight: 600; }
+  .tbl-box table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl-box th { padding: 10px 14px; text-align: left; color: #4a7070; font-weight: 600; border-bottom: 0.5px solid #e8f0f0; }
+  .tbl-box td { padding: 10px 14px; border-bottom: 0.5px solid #f0f5f5; color: #1a3a3a; }
+  .tbl-box tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-teal { background: #0d6e6e; color: #fff; }
+  .badge-green { background: #1a9a6a; color: #fff; }
+  .badge-yellow { background: #e8a800; color: #fff; }
+  .badge-red { background: #c0392b; color: #fff; }
+  .qa-box { background: #fff; border-radius: 12px; border: 0.5px solid #d4e8e8; padding: 18px 22px; margin-bottom: 22px; }
+  .qa-title { font-size: 14px; font-weight: 600; color: #0a4040; margin-bottom: 14px; }
+  .qa-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  .qa-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: opacity .2s, transform .1s; }
+  .qa-btn:active { transform: scale(.97); }
+  .qa-btn:hover { opacity: .88; }
+  .qa-teal { background: #0d6e6e; color: #fff; }
+  .qa-lteal { background: #e1f5f0; color: #0a4f4f; border: 0.5px solid #a0d8d0; }
+  .qa-blue { background: #1a7fd4; color: #fff; }
+  .qa-yellow { background: #e8a800; color: #fff; }
+  .qa-red { background: #c0392b; color: #fff; }
+  .qa-outline { background: transparent; color: #0a4040; border: 0.5px solid #a0c8c8; }
+  .qa-outline-blue { background: transparent; color: #1a7fd4; border: 0.5px solid #a0bce0; }
+  .qa-outline-amber { background: transparent; color: #b07800; border: 0.5px solid #e8c060; }
+  .site-footer { background: #1a2a2a; color: #a0b8b8; padding: 30px 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; font-size: 13px; margin-top: 10px; }
+  .site-footer h4 { color: #fff; font-weight: 600; margin-bottom: 10px; font-size: 14px; }
+  .site-footer a { color: #a0b8b8; text-decoration: none; display: block; margin-bottom: 5px; }
+  .site-footer a:hover { color: #4dd9ac; }
+  @media (max-width: 900px) {
+    .stat-grid, .ops-grid { grid-template-columns: repeat(2, 1fr); }
+    .tables-row { grid-template-columns: 1fr; }
+    .rev-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .stat-grid, .ops-grid, .rev-grid { grid-template-columns: 1fr; }
+    .site-footer { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
 
-{% block title %}Admin Dashboard - Rent2Ride{% endblock %}
+<nav class="topbar">
+  <a href="{% url 'home' %}" class="topbar-brand">
+    <svg viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="10" rx="3"/><path d="M5 9V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+    Rent2Ride
+  </a>
+  <div class="topbar-right">
+    <span>&#128100; {{ request.user.username }}</span>
+    <form method="post" action="{% url 'logout' %}" style="margin:0">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout">Logout</button>
+    </form>
+  </div>
+</nav>
 
-{% block content %}
-<div class="container my-4 my-md-5 admin-shell">
-    <section class="admin-hero mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
-            <div>
-                <h2 class="mb-2">Admin Dashboard</h2>
-                <p class="text-muted mb-0">Monitor platform health, approvals, and financial performance.</p>
-            </div>
-            <span class="badge bg-light text-dark border px-3 py-2">{{ pending_vehicles|add:pending_bookings|add:pending_verifications }} pending action{{ pending_vehicles|add:pending_bookings|add:pending_verifications|pluralize }}</span>
-        </div>
-        <div class="row g-2 g-md-3 mt-2">
-            <div class="col-6 col-md-3">
-                <div class="admin-mini-stat">
-                    <span class="admin-mini-label">Pending Vehicles</span>
-                    <strong>{{ pending_vehicles }}</strong>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="admin-mini-stat">
-                    <span class="admin-mini-label">Pending Bookings</span>
-                    <strong>{{ pending_bookings }}</strong>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="admin-mini-stat">
-                    <span class="admin-mini-label">License Verifications</span>
-                    <strong>{{ pending_verifications }}</strong>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="admin-mini-stat">
-                    <span class="admin-mini-label">New Users (30d)</span>
-                    <strong>{{ user_growth }}</strong>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-        <div>
-            <h4 class="mb-1">Operations Snapshot</h4>
-            <p class="text-muted mb-0">Core platform totals and financial health.</p>
-        </div>
-    </div>
-
-    <div class="row g-3 g-md-4 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card admin-stat-card admin-stat-primary text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Total Users</h6>
-                    <h3 class="mb-0">{{ total_users }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card admin-stat-card admin-stat-success text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Total Vehicles</h6>
-                    <h3 class="mb-0">{{ total_vehicles }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card admin-stat-card admin-stat-info text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Total Bookings</h6>
-                    <h3 class="mb-0">{{ total_bookings }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card admin-stat-card admin-stat-warning text-dark h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Pending Actions</h6>
-                    <h3 class="mb-1">{{ pending_vehicles|add:pending_bookings|add:pending_verifications }}</h3>
-                    <small>Vehicles: {{ pending_vehicles }} | Bookings: {{ pending_bookings }} | Verifications: {{ pending_verifications }}</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 g-md-4 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card admin-stat-card admin-stat-success text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Total Revenue</h6>
-                    <h3 class="mb-0">&#8369;{{ total_revenue|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="card admin-stat-card admin-stat-info text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Platform Commissions</h6>
-                    <h3 class="mb-1">&#8369;{{ total_commissions|floatformat:2 }}</h3>
-                    <small>Unpaid: &#8369;{{ unpaid_commissions|floatformat:2 }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="card admin-stat-card admin-stat-primary text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Payment Success Rate</h6>
-                    <h3 class="mb-1">{{ success_rate }}%</h3>
-                    <small>Last 30 days: {{ user_growth }} new users</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center admin-chart-header">
-            <h5 class="mb-0">Monthly Revenue (Last 6 Months)</h5>
-            <span class="text-white small">Trend Overview</span>
-        </div>
-        <div class="card-body admin-chart-body">
-            <canvas id="revenueChart" height="80"></canvas>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Most Rented Vehicles</h5>
-                </div>
-                <div class="card-body">
-                    {% if most_rented %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <caption class="visually-hidden">Top rented vehicles with owners and booking counts.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>Vehicle</th>
-                                        <th>Owner</th>
-                                        <th>Bookings</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for vehicle in most_rented %}
-                                        <tr>
-                                            <td>{{ vehicle.brand }} {{ vehicle.model }}</td>
-                                            <td>{{ vehicle.owner.username }}</td>
-                                            <td><span class="badge bg-primary">{{ vehicle.booking_count }}</span></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No booking data available.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Most Active Locations</h5>
-                </div>
-                <div class="card-body">
-                    {% if most_active_locations %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <caption class="visually-hidden">Most active locations with vehicle and booking counts.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>Location</th>
-                                        <th>Vehicles</th>
-                                        <th>Bookings</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for location in most_active_locations %}
-                                        <tr>
-                                            <td>{{ location.location }}</td>
-                                            <td>{{ location.vehicle_count }}</td>
-                                            <td><span class="badge bg-success">{{ location.booking_count }}</span></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No location data available.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Quick Actions</h5>
-        </div>
-        <div class="card-body">
-            <div class="d-grid d-md-flex flex-wrap gap-2 admin-action-row">
-                <a href="{% url 'admin_users' %}" class="btn btn-primary"><i class="bi bi-people me-1"></i> Manage Users</a>
-                <a href="{% url 'admin_vehicles' %}" class="btn btn-success"><i class="bi bi-car-front me-1"></i> Manage Vehicles</a>
-                <a href="{% url 'add_vehicle' %}" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> Add Vehicle</a>
-                <a href="{% url 'admin_bookings' %}" class="btn btn-info"><i class="bi bi-journal-check me-1"></i> Manage Bookings</a>
-                <a href="{% url 'admin_payments' %}" class="btn btn-warning"><i class="bi bi-credit-card me-1"></i> View Payments</a>
-                <a href="{% url 'manage_refunds' %}" class="btn btn-danger"><i class="bi bi-arrow-counterclockwise me-1"></i> Manage Refunds</a>
-            </div>
-            <div class="d-grid d-md-flex flex-wrap gap-2 mt-2 admin-action-row">
-                <a href="{% url 'admin_drivers_licenses' %}" class="btn btn-outline-primary"><i class="bi bi-card-text me-1"></i> Driver's Licenses</a>
-                <a href="{% url 'manage_payouts' %}" class="btn btn-outline-success"><i class="bi bi-cash-coin me-1"></i> Payout Requests</a>
-                <a href="{% url 'vehicle_utilization' %}" class="btn btn-outline-info"><i class="bi bi-bar-chart-line me-1"></i> Utilization</a>
-                <a href="{% url 'peak_demand_heatmap' %}" class="btn btn-outline-warning"><i class="bi bi-thermometer-half me-1"></i> Peak Demand</a>
-                <a href="{% url 'audit_log' %}" class="btn btn-outline-dark"><i class="bi bi-shield-check me-1"></i> Audit Log</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Bookings</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_bookings %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <caption class="visually-hidden">Recently created bookings and their statuses.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>User</th>
-                                        <th>Vehicle</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for booking in recent_bookings %}
-                                        <tr>
-                                            <td>#{{ booking.id }}</td>
-                                            <td>{{ booking.user.username }}</td>
-                                            <td>{{ booking.vehicle.model }}</td>
-                                            <td><span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %}">{{ booking.status }}</span></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No recent bookings.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Vehicles</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_vehicles %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <caption class="visually-hidden">Recently listed vehicles with owners and availability status.</caption>
-                                <thead>
-                                    <tr>
-                                        <th>Model</th>
-                                        <th>Owner</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for vehicle in recent_vehicles %}
-                                        <tr>
-                                            <td>{{ vehicle.model }}</td>
-                                            <td>{{ vehicle.owner.username }}</td>
-                                            <td><span class="badge bg-{% if vehicle.status == 'available' %}success{% elif vehicle.status == 'pending_approval' %}warning{% else %}danger{% endif %}">{{ vehicle.status }}</span></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No recent vehicles.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="ticker">
+  <strong>Rent2Ride</strong> now available in Cantilan &bull; Madrid &bull; Carrascal
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="main">
+
+  <div class="dash-header">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Monitor platform health, approvals, and financial performance.</p>
+    </div>
+    <a href="{% url 'admin_drivers_licenses' %}" class="pending-badge">
+      {{ pending_count }} pending action{{ pending_count|pluralize }}
+    </a>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="slabel">Pending Vehicles</div>
+      <div class="svalue">{{ pending_vehicles }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="slabel">Pending Bookings</div>
+      <div class="svalue">{{ pending_bookings }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="slabel">License Verifications</div>
+      <div class="svalue">{{ license_verifications }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="slabel">New Users (30d)</div>
+      <div class="svalue">{{ new_users_30d }}</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Operations Snapshot</div>
+  <div class="sec-sub">Core platform totals and financial health.</div>
+
+  <div class="ops-grid">
+    <div class="ops-card">
+      <div class="obig">{{ total_users }}</div>
+      <div class="osub">Total Users</div>
+    </div>
+    <div class="ops-card">
+      <div class="obig">{{ total_vehicles }}</div>
+      <div class="osub">Total Vehicles</div>
+    </div>
+    <div class="ops-card">
+      <div class="obig">{{ total_bookings }}</div>
+      <div class="osub">Total Bookings</div>
+    </div>
+    <div class="ops-card">
+      <div class="otitle">Pending Actions</div>
+      <div class="obig">{{ pending_count }}</div>
+      <div class="odetail">
+        Vehicles: {{ pending_vehicles }} | Bookings: {{ pending_bookings }} |
+        <strong>Verifications: {{ license_verifications }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="rev-grid">
+    <div class="rev-card">
+      <div class="rlabel">Total Revenue</div>
+      <div class="rvalue">&#8369;{{ total_revenue|floatformat:2 }}</div>
+    </div>
+    <div class="rev-card">
+      <div class="rlabel">Avg. Per Booking</div>
+      <div class="rvalue">&#8369;{{ avg_per_booking|floatformat:2 }}</div>
+    </div>
+    <div class="rev-card">
+      <div class="rlabel">Completion Rate</div>
+      <div class="rvalue">{{ completion_rate|floatformat:1 }}%</div>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-box-header">
+      <span class="ctitle">Monthly Revenue (Last 6 Months)</span>
+      <span class="ctrend">Trend Overview</span>
+    </div>
+    <canvas id="revenueChart"></canvas>
+  </div>
+
+  <div class="tables-row">
+    <div class="tbl-box">
+      <div class="tbl-head">Most Rented Vehicles</div>
+      <table>
+        <thead><tr><th>Vehicle</th><th>Owner</th><th>Bookings</th></tr></thead>
+        <tbody>
+          {% for v in most_rented_vehicles %}
+          <tr>
+            <td>{{ v.name }}</td>
+            <td>{{ v.owner }}</td>
+            <td><span class="badge badge-teal">{{ v.bookings }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;color:#6a9090;padding:16px">No data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-box">
+      <div class="tbl-head">Most Active Locations</div>
+      <table>
+        <thead><tr><th>Location</th><th>Vehicles</th><th>Bookings</th></tr></thead>
+        <tbody>
+          {% for loc in active_locations %}
+          <tr>
+            <td>{{ loc.name }}</td>
+            <td>{{ loc.vehicles }}</td>
+            <td><span class="badge badge-teal">{{ loc.bookings }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;color:#6a9090;padding:16px">No data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="qa-box">
+    <div class="qa-title">Quick Actions</div>
+    <div class="qa-btns">
+      <a href="{% url 'admin_users' %}" class="qa-btn qa-teal">&#128101; Manage Users</a>
+      <a href="{% url 'admin_vehicles' %}" class="qa-btn qa-lteal">&#128663; Manage Vehicles</a>
+      <a href="{% url 'add_vehicle' %}" class="qa-btn qa-lteal">&#43; Add Vehicle</a>
+      <a href="{% url 'admin_bookings' %}" class="qa-btn qa-blue">&#128196; Manage Bookings</a>
+      <a href="{% url 'admin_payments' %}" class="qa-btn qa-yellow">&#128179; View Payments</a>
+      <a href="{% url 'manage_refunds' %}" class="qa-btn qa-red">&#8635; Manage Refunds</a>
+    </div>
+    <div class="qa-btns">
+      <a href="{% url 'admin_drivers_licenses' %}" class="qa-btn qa-outline">&#128196; Driver's Licenses</a>
+      <a href="{% url 'manage_payouts' %}" class="qa-btn qa-outline">&#128184; Payout Requests</a>
+      <a href="{% url 'vehicle_utilization' %}" class="qa-btn qa-outline-blue">&#128200; Utilization</a>
+      <a href="{% url 'peak_demand_heatmap' %}" class="qa-btn qa-outline-amber">&#128293; Peak Demand</a>
+      <a href="{% url 'audit_log' %}" class="qa-btn qa-outline">&#128737; Audit Log</a>
+    </div>
+  </div>
+
+  <div class="tables-row">
+    <div class="tbl-box">
+      <div class="tbl-head">Recent Bookings</div>
+      <table>
+        <thead><tr><th>ID</th><th>User</th><th>Vehicle</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for b in recent_bookings %}
+          <tr>
+            <td>#{{ b.id }}</td>
+            <td>{{ b.user }}</td>
+            <td>{{ b.vehicle }}</td>
+            <td>
+              <span class="badge {% if b.status == 'confirmed' %}badge-green{% elif b.status == 'pending' %}badge-yellow{% else %}badge-red{% endif %}">
+                {{ b.status }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="text-align:center;color:#6a9090;padding:16px">No bookings yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-box">
+      <div class="tbl-head">Recent Vehicles</div>
+      <table>
+        <thead><tr><th>Model</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for v in recent_vehicles %}
+          <tr>
+            <td>{{ v.model }}</td>
+            <td>{{ v.owner }}</td>
+            <td>
+              <span class="badge {% if v.status == 'available' %}badge-green{% elif v.status == 'pending' %}badge-yellow{% else %}badge-red{% endif %}">
+                {{ v.status }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;color:#6a9090;padding:16px">No vehicles yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <div>
+    <h4>Rent2Ride</h4>
+    <p>Vehicle rental platform for Surigao del Sur.</p>
+  </div>
+  <div>
+    <h4>Quick Links</h4>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'admin_vehicles' %}">Vehicles</a>
+    <a href="{% url 'admin_bookings' %}">Bookings</a>
+    <a href="{% url 'admin_users' %}">Users</a>
+  </div>
+  <div>
+    <h4>Legal</h4>
+    <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+    <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+  </div>
+</footer>
+
 <script>
-    const ctx = document.getElementById('revenueChart');
-    if (ctx) {
-        const revenueData = {{ monthly_revenue|safe }};
-        if (revenueData && revenueData.length > 0) {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: revenueData.map(d => d.month),
-                    datasets: [{
-                        label: 'Revenue (PHP)',
-                        data: revenueData.map(d => d.revenue),
-                        borderColor: 'rgb(13, 148, 136)',
-                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '\u20B1' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+  const labels = {{ chart_labels|safe }};
+  const data   = {{ chart_data|safe }};
+  new Chart(document.getElementById('revenueChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (₱)',
+        data,
+        borderColor: '#4dd9ac',
+        backgroundColor: 'rgba(77,217,172,0.15)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#4dd9ac',
+        pointRadius: 4,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#a0d4d4', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.08)' } },
+        y: {
+          ticks: { color: '#a0d4d4', font: { size: 11 }, callback: v => '₱' + Number(v).toLocaleString() },
+          grid: { color: 'rgba(255,255,255,0.08)' }
         }
+      }
     }
+  });
 </script>
-{% endblock %}
+</body>
+</html>
